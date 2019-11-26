@@ -13,8 +13,8 @@ WIEGAND wg;
 
 
 #ifndef STASSID
-#define STASSID "NattyNaomi"
-#define STAPSK  "dizzypiano750"
+#define STASSID "" //Put SSID Here
+#define STAPSK  "" //Put Password Here
 #endif
 
 
