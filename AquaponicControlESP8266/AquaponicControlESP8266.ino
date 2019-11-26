@@ -23,20 +23,34 @@ float allowedHighWaterTemperature;
 float insideAirTemperature;
 float outsideAirTemperature;
 float wantedTemperature;
-
+float allowedLowAirTemperature;
+float allowedHighAirTemperature;
 
 float insideHumidity;
 float outsideHumidity;
 float wantedHumidity;
+float allowedLowHumidity;
+float allowedHighHumidity;
 
 float pHReading;
 float wantedpH;
+float allowedLowpH;
+float allowedHighpH;
+
 
 float turbidityVoltage;
-float allowedTurbidity;
+float allowedLowTurbidity;
+float allowedHighTurbidity;
 
 float tdsValue;
-float allowedTDS;
+float allowedLowTDS;
+float allowedHighTDS;
+
+float waterLevel;
+ 
+int isFilled;
+int pumpState;
+int mixerState                                                                                                    ;
 
 
 
@@ -76,3 +90,4 @@ String postRequest(){
     http.end();
 
 }
+

@@ -60,6 +60,9 @@ float pHReading1;
 float pHReading2;
 float pHReading3;
 int AV;
+float wantedpH;
+float allowedLowpH;
+float allowedHighpH;
 
 unsigned int CalLow = 341;
 float CalLowpH = 4.00;
@@ -87,15 +90,23 @@ GravityTDS tdsSensor;
 
 float tdsValue;
 float ecValue;
+float allowedLowTDS;
+float allowedHighTDS;
+
 
 float tdsCalibrationValue;
 //Temperature and Humidity Variables
 //water
 DFRobot_SHT20 waterTemperatureSensor;
 float waterTemperature = 25;
+float wantedWaterTemperature;
+float allowedLowWaterTemperature;
+float allowedHighWaterTemperature;
 
 //turbidity
 float turbidityVoltage;
+float allowedLowTurbidity;
+float allowedHighTurbidity;
 
 //air
 DHT22 insideTemperatureSensor(insideDHT22Pin);
@@ -104,13 +115,22 @@ DHT22 outsideTemperatureSensor(outsideDHT22Pin);
 
 float insideAirTemperature;
 float outsideAirTemperature;
+float allowedLowAirTemperature;
+float allowedHighAirTemperature;
 
 float insideHumidity;
 float outsideHumidity;
+float wantedHumidity;
+float allowedLowHumidity;
+float allowedHighHumidity;
 
 //Liquid Fill
 
-int liquidFilled = 0 void setup()
+int liquidFilled = 0
+//Water Level
+
+
+void setup()
 {
   Serial.begin(9600);
   Serial3.begin(9600);
