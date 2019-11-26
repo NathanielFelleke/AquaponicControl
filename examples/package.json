@@ -1,0 +1,20 @@
+{
+  "name": "homeiotserver",
+  "version": "1.0.0",
+  "description": "Server for Home that will connect to many devices with an open API",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Nathaniel Felleke",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "body-parser": "^1.18.3",
+    "bolt": "^0.22.6",
+    "bolt-iot-wrapper": "^1.0.13",
+    "express": "^4.16.4",
+    "mongoose": "^5.5.0",
+    "request": "^2.88.0"
+  }
+}
