@@ -126,7 +126,7 @@ float allowedHighHumidity;
 
 //Liquid Fill
 
-int liquidFilled = 0
+int liquidFilled = 0;
 //Water Level
 
 
