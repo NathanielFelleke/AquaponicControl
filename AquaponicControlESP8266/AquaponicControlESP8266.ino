@@ -53,6 +53,7 @@ int liquidFilled;
 int pumpState;
 int mixerState;
 
+float lightStates = {100.0,100.0};
 String SerialCommand;
 
 void setup() {
@@ -80,7 +81,74 @@ void loop() {
     }
 
     if (SerialCommand.length() > 0) {
-        if(SerialCommand.startsWith("")); //TODO add header that checks for the input and update the matching variable example: .startsWith("wt:"")  
+        if(SerialCommand.startsWith("ph:"))
+        {
+            SerialCommand.substring(3);
+            pHReading = SerialCommand.toFloat();
+        } 
+        else if(SerialCommand.startsWith("wt:"))
+        {
+            SerialCommand.substring(3);
+            waterTemperature = SerialCommand.toFloat();
+        }
+        else if(SerialCommand.startsWith("tds:"))
+        {
+            SerialCommand.substring(4);
+        tdsValue = SerialCommand.toFloat();
+        }
+        else if(SerialCommand.startsWith("iat:"))
+        {
+ SerialCommand.substring(4);
+        insideAirTemperature = SerialCommand.toFloat();
+        }
+        else if(SerialCommand.startsWith("ih:")){
+            SerialCommand.substring(3);
+            insideHumidity = SerialCommand.toFloat();
+        }
+        else if(SerialCommand.startsWith("oat:"))
+        {
+            SerialCommand.substring(4);
+            outsideAirTemperature = SerialCommand.toFloat();
+        }
+        else if(SerialCommand.startsWith("oh:"))
+        {
+            SerialCommand.substring(3);
+            outsideHumidity = SerialCommand.toFloat();
+        }
+        else if(SerialCommand.startsWIth("tv:"))
+        {
+            SerialCommand.substring(3);
+            turbidityVoltage = SerialCommand.toFloat();
+        }
+        else if(SerialCommand.startsWith("ps:"))
+        {
+            SerialCommand.substring(3);
+            pumpState = SerialCommand.toInt();
+        }
+        else if(SerialCommand.startsWIth("lf:"))
+        {
+            SerialCommand.substring(3);
+            liquidFilled = SerialCommand.toInt();
+        }
+        else if(SerialCommand.startsWith("ls:"))
+        {
+            SerialCommand.substring(3);
+            lightStates[0] = SerialCommand.toFloat();
+            lightStates[1] = SerialCommand.toFloat();
+
+        }
+        else if(SerialCommand.startsWith("lsr:"))
+        {
+            SerialCommand.substring(4);
+            lightStates[0] = SerialCommand.toFloat();
+        }
+        else if(SerialCommand.startsWith("lsb:"))
+        {
+            SerialCommand.substring(4);
+            lightStates[1] = SerialCommand.toFLoat();
+            //
+        }
+        //TODO add header that checks for the input and update the matching variable example: .startsWith("wt:"")  
         //TODO Create Code that checks for serial coming from Arduino Master COntrol
         SerialCommand = "";
     }
@@ -104,5 +172,9 @@ String postRequest() {
 }
 
 void initMainControl() {
+
+}
+
+initServer(){
 
 }

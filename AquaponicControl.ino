@@ -29,31 +29,18 @@
 
 //control pins
 
-# define redLightPin 3
-# define blueLightPin 4
+#define redLightPin 3
+#define blueLightPin 4
 
 
 #define pumpControlPin 27
 #define mixerControlPin 28
 
 //unit constants
-
 const float cubicFeetToLitersConstant = 28.3168466;
 
-//time update
 
-#define updata_flag 0 //1 updata time,0 only show time
-//Modify the following data
-# define TIME_YR 19# define TIME_MTH 11# define TIME_DATE 24# define TIME_DOW 7# define TIME_HR 2# define TIME_MIN 50# define TIME_SEC 0
-char * str[] = {
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday"
-}; //week
+
 int rtc[7];
 
 String MasterSerialCommand; //serial input from computer
@@ -145,13 +132,16 @@ int liquidFilled = 0;
 //CC
 
 
-//lights 
+//States 
 
 float lightStates = {
   100,
   100
 }; //Red State then Blue State
 
+int pumpState = 0;
+
+int mixerState = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -233,9 +223,9 @@ void setup() {
 
   pinMode(redLightPin, OUTPUT);
   pinMode(blueLightPin, OUTPUT);
- // TurnRedLightsOn(lightStates[0]);
- //TurnBlueLightsOn(lightStates[1]); 
-// TODO need to check if it is okay to use the method so early in their processes 
+  // TurnRedLightsOn(lightStates[0]);
+  //TurnBlueLightsOn(lightStates[1]); 
+  // TODO need to check if it is okay to use the method so early in their processes 
   analogWrite(redLightPin, lightStates[0]);
   analogWrite(blueLightPin, lightStates[1]);
 }
@@ -426,10 +416,11 @@ void updateAirTemperature() {
   outsideHumidity = outsideTemperatureSensor.getHumidity();
   delay(50);
   Serial1.write("iat:" + (String) insideAirTemperature); // TODO check to see if works
+
+  Serial1.write("ih:" + (String) insideHumidity);
   delay(50);
   Serial1.write("oat:" + (String) outsideAirTemperature);
-  delay(50);
-  Serial1.write("ih:" + (String) insideHumidity);
+
   delay(50);
   Serial1.write("oh:" + (String) outsideHumidity);
   //TODO write code that updates esp8266 through serial
@@ -438,7 +429,7 @@ void updateAirTemperature() {
 void updateWaterTemperature() {
   waterTemperature = waterTemperatureSensor.readTemperature();
   delay(50);
-  Serial1.write("wt:" + (String)waterTemperature); // TODO check to see if it works
+  Serial1.write("wt:" + (String) waterTemperature); // TODO check to see if it works
   //TODO write code that updates esp8266 through serial
 }
 
@@ -463,7 +454,7 @@ void updateTDS() {
   tdsValue = tdsSensor.getTdsValue();
   ecValue = tdsSensor.getEcValue();
   delay(50);
-  Serial1.write("tds:" + (String)tdsValue);
+  Serial1.write("tds:" + (String) tdsValue);
   //TODO write code that updates esp8266 through serial
 }
 
@@ -501,7 +492,7 @@ void TurnAllLightsOn(float brightness) {
   lightStates[0] = filteredBrightness;
   lightStates[1] = filteredBrightness;
   delay(50);
-  Serial1.write("ls:" + (String)lightStates[0]);
+  Serial1.write("ls:" + (String) lightStates[0]);
   //TODO write code that updates esp8266 through serial
 }
 
@@ -511,7 +502,7 @@ void TurnAllLightsOff() {
   lightStates[0] = 0;
   lightStates[1] = 0;
   delay(50);
-  Serial1.write("ls:" + (String)lightStates[0]);
+  Serial1.write("ls:" + (String) lightStates[0]);
   //TODO write code that updates esp8266 through serial
 }
 
@@ -534,7 +525,7 @@ void TurnRedLightsOn(float brightness) {
   filteredBrightness = analogBrightnessValue / 2.55;
   lightStates[0] = filteredBrightness;
   delay(50);
-  Serial1.write("lsr:" + (String)lightStates[0]);
+  Serial1.write("lsr:" + (String) lightStates[0]);
   //TODO write code that updates esp8266 through serial
 }
 
@@ -542,7 +533,7 @@ void TurnRedLightsOff() {
   digitalWrite(redLightPin, LOW);
   lightStates[0] = 0;
   delay(50);
-  Serial1.write("lsr:" + (String)lightStates[0]);
+  Serial1.write("lsr:" + (String) lightStates[0]);
   //TODO write code that updates esp8266 through serial
 }
 
@@ -564,7 +555,7 @@ void TurnBlueLightsOn(float brightness) {
   filteredBrightness = analogBrightnessValue / 2.55;
   lightStates[0] = filteredBrightness;
   delay(50);
-  Serial1.write("lsb:" + (String)lightStates[1]);
+  Serial1.write("lsb:" + (String) lightStates[1]);
   //TODO write code that updates esp8266 through serial
 }
 
@@ -572,21 +563,41 @@ void TurnBlueLightsOff() {
   digitalWrite(blueLightPin, LOW);
   lightStates[1] = 0;
   delay(50);
-  Serial1.write("lsb:" + (String)lightStates[1]);
+  Serial1.write("lsb:" + (String) lightStates[1]);
   //TODO write code that updates esp8266 through serial
 }
 
+
+void TurnPumpOn() {
+  digitalWrite(pumpControlPin, HIGH);
+  pumpState = 1;
+  delay(50);
+  Serial1.write("ps:" + (String) pumpState);
+}
+
+void TurnPumpOff() {
+  digitalWrite(pumpControlPin, LOW);
+  pumpState = 0;
+  delay(50);
+  Serial1.write("ps:" + (String) pumpState);
+}
+
+void TurnMixerOn() {
+  digitalWrite(mixerControlPin, HIGH);
+  mixerState = 1;
+  delay(50);
+  Serial1.write("ms:" + (String) mixerState);
+}
+
+void TurnMixerOff() {
+  digitalWrite(mixerControlPin, LOW);
+  mixerState = 0;
+  delay(50);
+  Serial1.write("ms:" + (String) mixerState);
+}
 //Time Methods
 
 void setTime(int sec, int min, int hour, int dow, int date, int month, int year) {
-  RTC.get(rtc, true);
-  RTC.stop();
-
-  RTC.set(DS1307_SEC, rtc[0] + 1);
-  RTC.start();
-  if (updata_flag) {
-    Serial.println(" OldTime:  ");
-    showtime();
     RTC.stop();
 
     RTC.set(DS1307_SEC, sec); //---Update time----
@@ -597,31 +608,8 @@ void setTime(int sec, int min, int hour, int dow, int date, int month, int year)
     RTC.set(DS1307_MTH, month);
     RTC.set(DS1307_YR, year);
     RTC.start();
-    Serial.println(" SetTime:  ");
-    showtime();
-  }
-}
-
-void showtime() //
-{
-  RTC.get(rtc, true); {
-    Serial.print(rtc[6]); /*YEAR MONTH DATE*/
-    Serial.print("-");
-    Serial.print(rtc[5]);
-    Serial.print("-");
-    Serial.println(rtc[4]);
-
-    Serial.print(rtc[2]); /*HOUR  MIN SEC */
-    Serial.print(":");
-    Serial.print(rtc[1]);
-    Serial.print(":");
-    Serial.println(rtc[0]);
-
-    Serial.println(str[rtc[3] - 1]); /********WEEK*****/
-    Serial.println("**********");
-  }
 }
 
 void initServer() {
-
+  Serial.write("");
 }
