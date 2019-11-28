@@ -1,17 +1,18 @@
 #include <ESP8266HTTPClient.h>
+
 #include <ESP8266WiFi.h>
 
-#ifndef STASSID
-#define STASSID "" //Put SSID Here
-#define STAPSK  "" //Put Password Here
-#endif
+#
+ifndef STASSID# define STASSID "" //Put SSID Here
+# define STAPSK "" //Put Password Here
+# endif
 
 const int controlID = 0
-String server = "http://192.168.0.151:3000" ;
+String server = "http://192.168.0.151:3000";
 String readURI = server + "/control/" + controlID;
 
-const char* ssid     = STASSID;
-const char* password = STAPSK;
+const char * ssid = STASSID;
+const char * password = STAPSK;
 
 //data to receive
 
@@ -47,34 +48,45 @@ float allowedLowTDS;
 float allowedHighTDS;
 
 float waterLevel;
- 
-int isFilled;
+
+int liquidFilled;
 int pumpState;
-int mixerState                                                                                                    ;
+int mixerState;
 
+String SerialCommand;
 
-
-void setup(){
+void setup() {
     Serial.begin(9600);
-
     WiFi.begin(ssid, password);
-    while(WiFi.status() != WL_CONNECTED){
+    while (WiFi.status() != WL_CONNECTED) {
         delay(1000);
-        Serial.print("Connecting");
+    }
+    IPAdress localIP = WiFi.localIP();
+    Serial.print("c");
+
+    
+
+
+
+}
+
+void loop() {
+    while (Serial.available()) {
+        delay(4);
+        if (Serial.available() > 0) {
+            char c = Serial.read();
+            SerialCommand += c;
+        }
     }
 
-    Serial.println("Connected");
-
-    IPAdress localIP = WiFi.localIP();
-
-
+    if (SerialCommand.length() > 0) {
+        if(SerialCommand.startsWith("")); //TODO add header that checks for the input and update the matching variable example: .startsWith("wt:"")  
+        //TODO Create Code that checks for serial coming from Arduino Master COntrol
+        SerialCommand = "";
+    }
 }
 
-void loop(){
-
-}
-
-String postRequest(){
+String postRequest() {
     String readData;
     String payload;
     int httpCode;
@@ -91,3 +103,6 @@ String postRequest(){
 
 }
 
+void initMainControl() {
+
+}
