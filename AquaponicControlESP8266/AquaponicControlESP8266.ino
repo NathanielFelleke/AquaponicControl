@@ -8,7 +8,7 @@ ifndef STASSID# define STASSID "" //Put SSID Here
 # endif
 
 const int controlID = 0
-String server = "http://192.168.0.151:3000";
+String server = "http=//192.168.0.151=3000";
 String readURI = server + "/control/" + controlID;
 
 const char * ssid = STASSID;
@@ -81,81 +81,94 @@ void loop() {
     }
 
     if (SerialCommand.length() > 0) {
-        if(SerialCommand.startsWith("ph:"))
+        if(SerialCommand.startsWith("ph="))
         {
+             postRequest(SerialCommand);
             SerialCommand.substring(3);
             pHReading = SerialCommand.toFloat();
         } 
-        else if(SerialCommand.startsWith("wt:"))
+        else if(SerialCommand.startsWith("wt="))
         {
+             postRequest(SerialCommand);
             SerialCommand.substring(3);
             waterTemperature = SerialCommand.toFloat();
         }
-        else if(SerialCommand.startsWith("tds:"))
+        else if(SerialCommand.startsWith("tds="))
         {
+             postRequest(SerialCommand);
             SerialCommand.substring(4);
         tdsValue = SerialCommand.toFloat();
         }
-        else if(SerialCommand.startsWith("iat:"))
+        else if(SerialCommand.startsWith("iat="))
         {
+             postRequest(SerialCommand);
  SerialCommand.substring(4);
         insideAirTemperature = SerialCommand.toFloat();
         }
-        else if(SerialCommand.startsWith("ih:")){
+        else if(SerialCommand.startsWith("ih=")){
+             postRequest(SerialCommand);
             SerialCommand.substring(3);
             insideHumidity = SerialCommand.toFloat();
         }
-        else if(SerialCommand.startsWith("oat:"))
+        else if(SerialCommand.startsWith("oat="))
         {
+             postRequest(SerialCommand);
             SerialCommand.substring(4);
             outsideAirTemperature = SerialCommand.toFloat();
         }
-        else if(SerialCommand.startsWith("oh:"))
+        else if(SerialCommand.startsWith("oh="))
         {
+             postRequest(SerialCommand);
             SerialCommand.substring(3);
             outsideHumidity = SerialCommand.toFloat();
         }
-        else if(SerialCommand.startsWIth("tv:"))
+        else if(SerialCommand.startsWIth("tv="))
         {
+             postRequest(SerialCommand);
             SerialCommand.substring(3);
             turbidityVoltage = SerialCommand.toFloat();
         }
-        else if(SerialCommand.startsWith("ps:"))
+        else if(SerialCommand.startsWith("ps="))
         {
+             postRequest(SerialCommand);
             SerialCommand.substring(3);
             pumpState = SerialCommand.toInt();
         }
-        else if(SerialCommand.startsWIth("lf:"))
+        else if(SerialCommand.startsWIth("lf="))
         {
+             postRequest(SerialCommand);
             SerialCommand.substring(3);
             liquidFilled = SerialCommand.toInt();
         }
-        else if(SerialCommand.startsWith("ls:"))
+        else if(SerialCommand.startsWith("ls="))
         {
+             postRequest(SerialCommand);
             SerialCommand.substring(3);
             lightStates[0] = SerialCommand.toFloat();
             lightStates[1] = SerialCommand.toFloat();
 
         }
-        else if(SerialCommand.startsWith("lsr:"))
+        else if(SerialCommand.startsWith("lsr="))
         {
+             postRequest(SerialCommand);
             SerialCommand.substring(4);
             lightStates[0] = SerialCommand.toFloat();
         }
-        else if(SerialCommand.startsWith("lsb:"))
+        else if(SerialCommand.startsWith("lsb="))
         {
+            postRequest(SerialCommand);
             SerialCommand.substring(4);
             lightStates[1] = SerialCommand.toFLoat();
             //
         }
-        //TODO add header that checks for the input and update the matching variable example: .startsWith("wt:"")  
+        //TODO add header that checks for the input and update the matching variable example= .startsWith("wt="")  
         //TODO Create Code that checks for serial coming from Arduino Master COntrol
         SerialCommand = "";
     }
 }
 
-String postRequest() {
-    String readData;
+String postRequest(String readData) {
+   // String readData;
     String payload;
     int httpCode;
 
