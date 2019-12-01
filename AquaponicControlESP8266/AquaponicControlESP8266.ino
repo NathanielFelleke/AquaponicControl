@@ -71,7 +71,7 @@ void setup() {
     delay(1000);
     IPAdress localIP = WiFi.localIP();
     Serial.print("c");
-    socket.emit("isControl", "1");
+    socket.emit("isControlSocket", "1");
     
 
 
