@@ -2,14 +2,17 @@
 
 #include <ESP8266WiFi.h>
 
-#
-ifndef STASSID# define STASSID "" //Put SSID Here
-# define STAPSK "" //Put Password Here
-# endif
+#ifndef 
+#define STASSID "" //Put SSID Here
+#define STAPSK "" //Put Password Here
+#endif
 
 const int controlID = 0
-String server = "http=//192.168.0.151=3000";
-String readURI = server + "/control/" + controlID;
+String server = "http=//192.168.0.151";
+int port = 3000;
+//String readURI = server + "/control/" + controlID;
+
+SocketIoClient socket;
 
 const char * ssid = STASSID;
 const char * password = STAPSK;
@@ -50,6 +53,7 @@ float allowedHighTDS;
 float waterLevel;
 
 int liquidFilled;
+
 int pumpState;
 int mixerState;
 
@@ -62,9 +66,12 @@ void setup() {
     while (WiFi.status() != WL_CONNECTED) {
         delay(1000);
     }
+    socket.on("wantedpH", UpdateWantedpH);
+    socket.begin(server, port);
+    delay(1000);
     IPAdress localIP = WiFi.localIP();
     Serial.print("c");
-
+    socket.emit("isControl", "1");
     
 
 
@@ -72,6 +79,7 @@ void setup() {
 }
 
 void loop() {
+    
     while (Serial.available()) {
         delay(4);
         if (Serial.available() > 0) {
@@ -79,70 +87,73 @@ void loop() {
             SerialCommand += c;
         }
     }
+    
 
     if (SerialCommand.length() > 0) {
+        socket.emit("controlUpdate",SerialCommand);
         if(SerialCommand.startsWith("ph="))
         {
-             postRequest(SerialCommand);
+            socket.emit("")
             SerialCommand.substring(3);
             pHReading = SerialCommand.toFloat();
         } 
         else if(SerialCommand.startsWith("wt="))
         {
-             postRequest(SerialCommand);
+            
             SerialCommand.substring(3);
             waterTemperature = SerialCommand.toFloat();
         }
         else if(SerialCommand.startsWith("tds="))
         {
-             postRequest(SerialCommand);
+        
             SerialCommand.substring(4);
-        tdsValue = SerialCommand.toFloat();
+            tdsValue = SerialCommand.toFloat();
         }
         else if(SerialCommand.startsWith("iat="))
         {
-             postRequest(SerialCommand);
- SerialCommand.substring(4);
+           
+        SerialCommand.substring(4);
         insideAirTemperature = SerialCommand.toFloat();
         }
-        else if(SerialCommand.startsWith("ih=")){
-             postRequest(SerialCommand);
+        else if(SerialCommand.startsWith("ih="))
+        {
+           
             SerialCommand.substring(3);
             insideHumidity = SerialCommand.toFloat();
         }
         else if(SerialCommand.startsWith("oat="))
         {
-             postRequest(SerialCommand);
+          
             SerialCommand.substring(4);
             outsideAirTemperature = SerialCommand.toFloat();
         }
         else if(SerialCommand.startsWith("oh="))
         {
-             postRequest(SerialCommand);
+          
             SerialCommand.substring(3);
             outsideHumidity = SerialCommand.toFloat();
         }
         else if(SerialCommand.startsWIth("tv="))
         {
-             postRequest(SerialCommand);
+       
             SerialCommand.substring(3);
             turbidityVoltage = SerialCommand.toFloat();
         }
         else if(SerialCommand.startsWith("ps="))
         {
-             postRequest(SerialCommand);
+        
             SerialCommand.substring(3);
             pumpState = SerialCommand.toInt();
         }
         else if(SerialCommand.startsWIth("lf="))
         {
-             postRequest(SerialCommand);
+           
             SerialCommand.substring(3);
             liquidFilled = SerialCommand.toInt();
         }
         else if(SerialCommand.startsWith("ls="))
         {
-             postRequest(SerialCommand);
+           
             SerialCommand.substring(3);
             lightStates[0] = SerialCommand.toFloat();
             lightStates[1] = SerialCommand.toFloat();
@@ -150,13 +161,13 @@ void loop() {
         }
         else if(SerialCommand.startsWith("lsr="))
         {
-             postRequest(SerialCommand);
+            
             SerialCommand.substring(4);
             lightStates[0] = SerialCommand.toFloat();
         }
         else if(SerialCommand.startsWith("lsb="))
         {
-            postRequest(SerialCommand);
+            socket.emit();
             SerialCommand.substring(4);
             lightStates[1] = SerialCommand.toFLoat();
             //
@@ -165,9 +176,12 @@ void loop() {
         //TODO Create Code that checks for serial coming from Arduino Master COntrol
         SerialCommand = "";
     }
+    socket.loop();
 }
 
-String postRequest(String readData) {
+
+// will use sockets as they are easeir to code and faster https://github.com/timum-viw/socket.io-client
+/*String postRequest(String readData) {
    // String readData;
     String payload;
     int httpCode;
@@ -183,11 +197,24 @@ String postRequest(String readData) {
     http.end();
 
 }
-
+*/
 void initMainControl() {
 
 }
 
-initServer(){
+void initServer(){
 
+}
+
+void formatJSON(){
+
+}
+
+
+//handling methods for socket
+
+void event(const char * payload, size_t length)
+{
+
+    Serial.print(payload);
 }

@@ -84,6 +84,7 @@ float pHDownConstant;
 float pHUpMolarity;
 float pHDownMolarity;
 
+int phControManuel = 0;
 //TDS Sensor Variables
 
 GravityTDS tdsSensor;
@@ -171,7 +172,7 @@ void setup() {
       pHTempInt = (HighByte << 8) + LowByte;
       CalLowpH = pHTempInt / 100.0;
     }
-  }
+  }1
   Serial.print("Low pH: ");
   Serial.print(CalLow);
   Serial.print("   ");
@@ -223,7 +224,7 @@ void setup() {
 
   pinMode(redLightPin, OUTPUT);
   pinMode(blueLightPin, OUTPUT);
-  // TurnRedLightsOn(lightStates[0]);
+  // TurnRedLightsOn(lightStates[0]);d]
   //TurnBlueLightsOn(lightStates[1]); 
   // TODO need to check if it is okay to use the method so early in their processes 
   analogWrite(redLightPin, lightStates[0]);
@@ -397,9 +398,9 @@ void updatepH() {
     pHReading1 = pHReading;
     Serial.print("pH = ");
     Serial.println(pHReading);
-    Serial1.write("ph=" + pHReading);
+    Serial1.write("{\"ph:\"" + "\"" + (String)pHReading + "\"}");
   } // End of if PHReading > 2 && PHReading < 12
-  else {
+  else {    // "{\"foo\":\"bar\"}"
     Serial1.write("ph=error");
     Serial.println("pH Probe Error");
   }
@@ -415,28 +416,30 @@ void updateAirTemperature() {
   insideHumidity = insideTemperatureSensor.getHumidity();
   outsideHumidity = outsideTemperatureSensor.getHumidity();
   delay(50);
-  Serial1.write("iat=" + (String) insideAirTemperature); // TODO check to see if works
-
-  Serial1.write("ih=" + (String) insideHumidity);
+  Serial1.write("{\"iat:\"" + "\"" + (String)insideAirTemperature + "\"}");
   delay(50);
-  Serial1.write("oat=" + (String) outsideAirTemperature);
-
+   // TODO check to see if works
+  Serial1.write("{\"ih:\"" + "\"" + (String)insideHumidity + "\"}");
   delay(50);
-  Serial1.write("oh=" + (String) outsideHumidity);
+  Serial1.write("{\"oat:\"" + "\"" + (String)outsideAirTemperature + "\"}");
+  delay(50);
+  Serial1.write("{\"oh:\"" + "\"" + (String)outsideHumidity + "\"}");
   //TODO write code that updates esp8266 through serial
 }
 
 void updateWaterTemperature() {
   waterTemperature = waterTemperatureSensor.readTemperature();
   delay(50);
-  Serial1.write("wt=" + (String) waterTemperature); // TODO check to see if it works
+  Serial1.write("{\"wt:\"" + "\"" + (String)waterTemperature + "\"}");
+  // TODO check to see if it works
   //TODO write code that updates esp8266 through serial
 }
 
 void updateTurbidity() {
   turbidityVoltage = turbidityGetMiddleAnalog(); //TODO check to see if it works
   delay(50);
-  Serial1.write("tv=" + turbidityVoltage); // TODO check if it works
+  Serial1.write("{\"tv:\"" + "\"" + (String)turbidityVoltage + "\"}");
+  // TODO check if it works
   //TODO write code that updates esp8266 through serial
 
 }
@@ -444,7 +447,7 @@ void updateTurbidity() {
 void updateLiquidFilled() {
   liquidFilled = digitalRead(liquidFilledSensor);
   delay(50);
-  Serial1.write("lf=" + (String) liquidFilled);
+  Serial1.write("{\"lf:\"" + "\"" + (String)liquidFilled + "\"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -454,7 +457,7 @@ void updateTDS() {
   tdsValue = tdsSensor.getTdsValue();
   ecValue = tdsSensor.getEcValue();
   delay(50);
-  Serial1.write("tds=" + (String) tdsValue);
+  Serial1.write("{\"tds:\"" + "\"" + (String)tdsValue + "\"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -492,7 +495,7 @@ void TurnAllLightsOn(float brightness) {
   lightStates[0] = filteredBrightness;
   lightStates[1] = filteredBrightness;
   delay(50);
-  Serial1.write("ls=" + (String) lightStates[0]);
+  Serial1.write("{\"ls:\"" + "\"" + (String)lightStates[0] + "\"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -502,7 +505,7 @@ void TurnAllLightsOff() {
   lightStates[0] = 0;
   lightStates[1] = 0;
   delay(50);
-  Serial1.write("ls=" + (String) lightStates[0]);
+  Serial1.write("{\"ls:\"" + "\"" + (String)lightStates[0] + "\"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -525,7 +528,7 @@ void TurnRedLightsOn(float brightness) {
   filteredBrightness = analogBrightnessValue / 2.55;
   lightStates[0] = filteredBrightness;
   delay(50);
-  Serial1.write("lsr=" + (String) lightStates[0]);
+  Serial1.write("{\"lsr:\"" + "\"" + (String)lightStates[0] + "\"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -533,7 +536,7 @@ void TurnRedLightsOff() {
   digitalWrite(redLightPin, LOW);
   lightStates[0] = 0;
   delay(50);
-  Serial1.write("lsr=" + (String) lightStates[0]);
+  Serial1.write("{\"lsr:\"" + "\"" + (String)lightStates[0] + "\"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -555,7 +558,8 @@ void TurnBlueLightsOn(float brightness) {
   filteredBrightness = analogBrightnessValue / 2.55;
   lightStates[0] = filteredBrightness;
   delay(50);
-  Serial1.write("lsb=" + (String) lightStates[1]);
+  Serial1.write("{\"lsb:\"" + "\"" + (String)lightStates[1] + "\"}");
+ 
   //TODO write code that updates esp8266 through serial
 }
 
@@ -563,7 +567,7 @@ void TurnBlueLightsOff() {
   digitalWrite(blueLightPin, LOW);
   lightStates[1] = 0;
   delay(50);
-  Serial1.write("lsb=" + (String) lightStates[1]);
+  Serial1.write("{\"lsb:\"" + "\"" + (String)lightStates[1] + "\"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -572,28 +576,28 @@ void TurnPumpOn() {
   digitalWrite(pumpControlPin, HIGH);
   pumpState = 1;
   delay(50);
-  Serial1.write("ps=" + (String) pumpState);
+  Serial1.write("{\"ps:\"" + "\"" + (String)pumpState + "\"}");
 }
 
 void TurnPumpOff() {
   digitalWrite(pumpControlPin, LOW);
   pumpState = 0;
   delay(50);
-  Serial1.write("ps=" + (String) pumpState);
+  Serial1.write("{\"ps:\"" + "\"" + (String)pumpState + "\"}");
 }
 
 void TurnMixerOn() {
   digitalWrite(mixerControlPin, HIGH);
   mixerState = 1;
   delay(50);
-  Serial1.write("ms=" + (String) mixerState);
+  Serial1.write("{\"ms:\"" + "\"" + (String)mixerState + "\"}");
 }
 
 void TurnMixerOff() {
   digitalWrite(mixerControlPin, LOW);
   mixerState = 0;
   delay(50);
-  Serial1.write("ms=" + (String) mixerState);
+  Serial1.write("{\"ms:\"" + "\"" + (String)mixerState + "\"}");
 }
 //Time Methods
 
