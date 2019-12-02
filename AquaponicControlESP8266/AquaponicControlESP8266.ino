@@ -1,14 +1,15 @@
-#include <ESP8266HTTPClient.h>
 
 #include <ESP8266WiFi.h>
+#include <ESP8266WiFiMulti.h>
 
-#ifndef 
-#define STASSID "" //Put SSID Here
-#define STAPSK "" //Put Password Here
-#endif
+#include <SocketIoClient.h>
 
-const int controlID = 0
-String server = "http=//192.168.0.151";
+#define STASSID "NattyNaomi" //Put SSID Here
+#define STAPSK "dizzypiano750" //Put Password Here
+
+//ESP8266WiFi WiFi;
+const int controlID = 0;
+char server[] = "192.168.0.102";
 int port = 3000;
 //String readURI = server + "/control/" + controlID;
 
@@ -57,21 +58,22 @@ int liquidFilled;
 int pumpState;
 int mixerState;
 
-float lightStates = {100.0,100.0};
+float lightStates[] = {100.0,100.0};
 String SerialCommand;
 
 void setup() {
     Serial.begin(9600);
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
-        delay(1000);
+      Serial.println("nc");
+        delay(2000);
     }
     socket.on("wantedpH", UpdateWantedpH);
     socket.begin(server, port);
-    delay(1000);
-    IPAdress localIP = WiFi.localIP();
+    socket.on("connect", connectEvent);
+    //IPAdress localIP = WiFi.localIP();
     Serial.print("c");
-    socket.emit("isControlSocket", "1");
+    
     
 
 
@@ -90,7 +92,12 @@ void loop() {
     
 
     if (SerialCommand.length() > 0) {
-        socket.emit("controlUpdate",SerialCommand);
+      
+      char SerialCommandChar[SerialCommand.length()];
+      SerialCommand.toCharArray(SerialCommandChar,SerialCommand.length()+1); 
+      Serial.println(SerialCommandChar);
+        socket.emit("controlUpdate",SerialCommandChar);
+        /*
         if(SerialCommand.startsWith("ph="))
         {
             socket.emit("")
@@ -171,7 +178,7 @@ void loop() {
             SerialCommand.substring(4);
             lightStates[1] = SerialCommand.toFLoat();
             //
-        }
+        }*/
         //TODO add header that checks for the input and update the matching variable example= .startsWith("wt="")  
         //TODO Create Code that checks for serial coming from Arduino Master COntrol
         SerialCommand = "";
@@ -213,8 +220,14 @@ void formatJSON(){
 
 //handling methods for socket
 
-void event(const char * payload, size_t length)
+void UpdateWantedpH(const char * payload, size_t length)
 {
 
     Serial.print(payload);
+}
+
+void connectEvent(const char * payload, size_t length)
+{
+
+    socket.emit("isControlSocket", "1");
 }

@@ -135,7 +135,7 @@ int liquidFilled = 0;
 
 //States 
 
-float lightStates = {
+float lightStates[] = {
   100,
   100
 }; //Red State then Blue State
@@ -145,7 +145,6 @@ int pumpState = 0;
 int mixerState = 0;
 
 void setup() {
-  Serial.begin(9600);
   Serial.begin(9600);
   Serial3.begin(9600);
 
@@ -172,7 +171,7 @@ void setup() {
       pHTempInt = (HighByte << 8) + LowByte;
       CalLowpH = pHTempInt / 100.0;
     }
-  }1
+  }
   Serial.print("Low pH: ");
   Serial.print(CalLow);
   Serial.print("   ");
@@ -220,7 +219,7 @@ void setup() {
   tdsSensor.setAdcRange(1024);
   tdsSensor.begin();
 
-  pinMode(liquidLevelSensor, INPUT);
+  pinMode(liquidFilledSensor, INPUT);
 
   pinMode(redLightPin, OUTPUT);
   pinMode(blueLightPin, OUTPUT);
@@ -243,10 +242,10 @@ void loop() {
   //time update
 
 
-  while (Serial1.avaiilable()) {
+  while (Serial3.available()) {
     delay(4);
-    if (Serial1.available() > 0) {
-      char c = Serial1.read();
+    if (Serial3.available() > 0) {
+      char c = Serial3.read();
       ServerSerialCommand += c; //updating the ServerSerialCommand
     }
   }
@@ -312,8 +311,8 @@ void loop() {
   //
   //Serial.print(waterTemperature);
 
-  showtime();
-  delay(1000);
+  TurnAllLightsOn(255);
+  delay(5000);
 }
 
 int pHGetMiddleAnalog() {
@@ -398,10 +397,10 @@ void updatepH() {
     pHReading1 = pHReading;
     Serial.print("pH = ");
     Serial.println(pHReading);
-    Serial1.write("{\"ph:\"" + "\"" + (String)pHReading + "\"}");
+    Serial3.print((String)"{\"ph\":" + (String)pHReading + (String)"}");
   } // End of if PHReading > 2 && PHReading < 12
   else {    // "{\"foo\":\"bar\"}"
-    Serial1.write("ph=error");
+    Serial3.print("{\"ph\":\"error\"}");
     Serial.println("pH Probe Error");
   }
   delay(50);
@@ -416,21 +415,21 @@ void updateAirTemperature() {
   insideHumidity = insideTemperatureSensor.getHumidity();
   outsideHumidity = outsideTemperatureSensor.getHumidity();
   delay(50);
-  Serial1.write("{\"iat:\"" + "\"" + (String)insideAirTemperature + "\"}");
+  Serial3.print((String)"{\"iat\":" + (String)"\"" + (String)insideAirTemperature + (String)"\"}");
   delay(50);
    // TODO check to see if works
-  Serial1.write("{\"ih:\"" + "\"" + (String)insideHumidity + "\"}");
+  Serial3.print((String)"{\"ih\":" + (String)"\"" + (String)insideHumidity + (String)"\"}");
   delay(50);
-  Serial1.write("{\"oat:\"" + "\"" + (String)outsideAirTemperature + "\"}");
+  Serial3.print((String)"{\"oat\":" + (String)"\"" + (String)outsideAirTemperature + (String)"\"}");
   delay(50);
-  Serial1.write("{\"oh:\"" + "\"" + (String)outsideHumidity + "\"}");
+  Serial3.print((String)"{\"oh\":" + (String)"\"" + (String)outsideHumidity + (String)"\"}");
   //TODO write code that updates esp8266 through serial
 }
 
 void updateWaterTemperature() {
   waterTemperature = waterTemperatureSensor.readTemperature();
   delay(50);
-  Serial1.write("{\"wt:\"" + "\"" + (String)waterTemperature + "\"}");
+  Serial3.print((String)"{\"wt\":" + (String)waterTemperature + (String)"}");
   // TODO check to see if it works
   //TODO write code that updates esp8266 through serial
 }
@@ -438,7 +437,7 @@ void updateWaterTemperature() {
 void updateTurbidity() {
   turbidityVoltage = turbidityGetMiddleAnalog(); //TODO check to see if it works
   delay(50);
-  Serial1.write("{\"tv:\"" + "\"" + (String)turbidityVoltage + "\"}");
+  Serial3.print((String)"{\"tv\":" + (String)turbidityVoltage + (String)"}");
   // TODO check if it works
   //TODO write code that updates esp8266 through serial
 
@@ -447,7 +446,7 @@ void updateTurbidity() {
 void updateLiquidFilled() {
   liquidFilled = digitalRead(liquidFilledSensor);
   delay(50);
-  Serial1.write("{\"lf:\"" + "\"" + (String)liquidFilled + "\"}");
+  Serial3.print((String)"{\"lf\":" + (String)liquidFilled + (String)"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -457,7 +456,7 @@ void updateTDS() {
   tdsValue = tdsSensor.getTdsValue();
   ecValue = tdsSensor.getEcValue();
   delay(50);
-  Serial1.write("{\"tds:\"" + "\"" + (String)tdsValue + "\"}");
+  Serial3.print((String)"{\"tds\":" + (String)tdsValue + (String)"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -495,7 +494,7 @@ void TurnAllLightsOn(float brightness) {
   lightStates[0] = filteredBrightness;
   lightStates[1] = filteredBrightness;
   delay(50);
-  Serial1.write("{\"ls:\"" + "\"" + (String)lightStates[0] + "\"}");
+  Serial3.print((String)"{\"ls\":" + (String)lightStates[0] + (String)"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -505,7 +504,7 @@ void TurnAllLightsOff() {
   lightStates[0] = 0;
   lightStates[1] = 0;
   delay(50);
-  Serial1.write("{\"ls:\"" + "\"" + (String)lightStates[0] + "\"}");
+  Serial3.print((String)"{\"ls\":" +  (String)lightStates[0] + (String)"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -528,7 +527,7 @@ void TurnRedLightsOn(float brightness) {
   filteredBrightness = analogBrightnessValue / 2.55;
   lightStates[0] = filteredBrightness;
   delay(50);
-  Serial1.write("{\"lsr:\"" + "\"" + (String)lightStates[0] + "\"}");
+  Serial3.print((String)"{\"lsr\":"+ (String)lightStates[0] + (String)"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -536,7 +535,7 @@ void TurnRedLightsOff() {
   digitalWrite(redLightPin, LOW);
   lightStates[0] = 0;
   delay(50);
-  Serial1.write("{\"lsr:\"" + "\"" + (String)lightStates[0] + "\"}");
+  Serial3.print((String)"{\"lsr\":"+ (String)lightStates[0] + (String)"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -558,7 +557,7 @@ void TurnBlueLightsOn(float brightness) {
   filteredBrightness = analogBrightnessValue / 2.55;
   lightStates[0] = filteredBrightness;
   delay(50);
-  Serial1.write("{\"lsb:\"" + "\"" + (String)lightStates[1] + "\"}");
+  Serial3.print((String)"{\"lsb\":" + (String)lightStates[1] + (String)"}");
  
   //TODO write code that updates esp8266 through serial
 }
@@ -567,7 +566,7 @@ void TurnBlueLightsOff() {
   digitalWrite(blueLightPin, LOW);
   lightStates[1] = 0;
   delay(50);
-  Serial1.write("{\"lsb:\"" + "\"" + (String)lightStates[1] + "\"}");
+  Serial3.print((String)"{\"lsb\":" + (String)lightStates[1] + (String)"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -576,28 +575,28 @@ void TurnPumpOn() {
   digitalWrite(pumpControlPin, HIGH);
   pumpState = 1;
   delay(50);
-  Serial1.write("{\"ps:\"" + "\"" + (String)pumpState + "\"}");
+  Serial3.print((String)"{\"ps\":" + (String)pumpState + (String)"}");
 }
 
 void TurnPumpOff() {
   digitalWrite(pumpControlPin, LOW);
   pumpState = 0;
   delay(50);
-  Serial1.write("{\"ps:\"" + "\"" + (String)pumpState + "\"}");
+  Serial3.print((String)"{\"ps\":" + (String)pumpState + (String)"}");
 }
 
 void TurnMixerOn() {
   digitalWrite(mixerControlPin, HIGH);
   mixerState = 1;
   delay(50);
-  Serial1.write("{\"ms:\"" + "\"" + (String)mixerState + "\"}");
+  Serial3.print((String)"{\"ms\":" +  (String)mixerState + (String)"}");
 }
 
 void TurnMixerOff() {
   digitalWrite(mixerControlPin, LOW);
   mixerState = 0;
   delay(50);
-  Serial1.write("{\"ms:\"" + "\"" + (String)mixerState + "\"}");
+  Serial3.print((String)"{\"ms\":"  + (String)mixerState + (String)"}");
 }
 //Time Methods
 
@@ -615,5 +614,5 @@ void setTime(int sec, int min, int hour, int dow, int date, int month, int year)
 }
 
 void initServer() {
-  Serial.write("");
+  Serial3.write("");
 }
