@@ -380,7 +380,7 @@ void loop() {
   //get temperatures
   //
   //Serial.print(waterTemperature);
-  if(currentMillis - pHPreviousMillis > pHInterval * 1000){
+  if(currentMillis - p                                                    XHPreviousMillis > pHInterval * 1000){
     updatepH();
     pHPreviousMillis = currentMillis;
   }
