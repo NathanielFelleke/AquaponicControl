@@ -1,4 +1,5 @@
-#include <EEPROM.h>
+
+#include <EEPROMex.h>
 
 #include <Wire.h>
 
@@ -76,6 +77,7 @@ byte calStatus;
 unsigned int pHTempInt;
 bool pHEnabled = true;
 
+
 //pH Control Peristaltic Pumps
 
 float pHUpConstant;
@@ -144,6 +146,21 @@ int pumpState = 0;
 
 int mixerState = 0;
 
+// intervals
+
+long pHInterval = 200;  //interval in seconds
+long wTInterval = 240;
+long wAInterval = 240;
+long tdsInterval = 360;
+long tInterval = 360;
+
+
+long pHPreviousMillis = 0;
+long wTPreviousMillis = 0;
+long wAPreviousMillis = 0;
+long tdsPreviousMillis = 0;
+long tPreviousMillis = 0;
+
 void setup() {
   Serial.begin(9600);
   Serial3.begin(9600);
@@ -152,7 +169,13 @@ void setup() {
   waterTemperatureSensor.initSHT20();
   //delay(2000);
   waterTemperatureSensor.checkSHT20();
-
+  
+  pHInterval = EEPROM.readLong(20);
+  wTInterval = EEPROM.readLong(21);
+  wAInterval = EEPROM.readLong(22);
+  tdsInterval = EEPROM.readLong(23);
+  tInterval = EEPROM.readLong(24);
+  
   calStatus = EEPROM.read(3);
   if (calStatus > 7) {
     calStatus = 0;
@@ -228,10 +251,12 @@ void setup() {
   // TODO need to check if it is okay to use the method so early in their processes 
   analogWrite(redLightPin, lightStates[0]);
   analogWrite(blueLightPin, lightStates[1]);
+
+  updateAll();
 }
 
 void loop() {
-
+  unsigned long currentMillis = millis();
   while (Serial.available()) {
     delay(4); //delay to allow buffer to fill
     if (Serial.available() > 0) {
@@ -252,10 +277,55 @@ void loop() {
 
   if (ServerSerialCommand.length() > 0) {
     //TODO Create Code that checks for serial coming from ESP8266
-    if (ServerSerialCommand == "C") {
+    if (ServerSerialCommand == "c") {
+      delay(1000);
+      
       initServer();
     }
 
+
+
+
+
+
+    if (MasterSerialCommand.startsWith("CL")) {
+      MasterSerialCommand = MasterSerialCommand.substring(2);
+      CalLowpH = MasterSerialCommand.toFloat();
+      CalLow = pHGetMiddleAnalog();
+      calStatus = calStatus | 1;
+      EEPROM.write(3, calStatus);
+      EEPROM.write(4, highByte(CalLow));
+      EEPROM.write(5, lowByte(CalLow));
+      pHTempInt = CalLowpH * 100.0;
+      EEPROM.write(6, highByte(pHTempInt));
+      EEPROM.write(7, lowByte(pHTempInt));
+    } else if (MasterSerialCommand.startsWith("CM")) {
+      MasterSerialCommand = MasterSerialCommand.substring(2);
+      CalMidpH = MasterSerialCommand.toFloat();
+      CalMid = pHGetMiddleAnalog();
+      calStatus = calStatus | 2;
+      EEPROM.write(3, calStatus);
+      EEPROM.write(8, highByte(CalMid));
+      EEPROM.write(9, lowByte(CalMid));
+      pHTempInt = CalMidpH * 100.0;
+      EEPROM.write(10, highByte(pHTempInt));
+      EEPROM.write(11, lowByte(pHTempInt));
+    } else if (MasterSerialCommand.startsWith("CU")) {
+      MasterSerialCommand = MasterSerialCommand.substring(2);
+      CalHighpH = MasterSerialCommand.toFloat();
+      CalHigh = pHGetMiddleAnalog();
+      calStatus = calStatus | 4;
+      EEPROM.write(3, calStatus);
+      EEPROM.write(12, highByte(CalHigh));
+      EEPROM.write(13, lowByte(CalHigh));
+      pHTempInt = CalHighpH * 100.0;
+      EEPROM.write(14, highByte(pHTempInt));
+      EEPROM.write(15, lowByte(pHTempInt));
+    } else if (MasterSerialCommand.startsWith("CTDS")) {
+      MasterSerialCommand = MasterSerialCommand.substring(4);
+      tdsCalibrationValue = MasterSerialCommand.toFloat();
+      tdsSensor.calibrate(tdsCalibrationValue, 25);
+    }
     ServerSerialCommand = "";
   }
 
@@ -310,9 +380,27 @@ void loop() {
   //get temperatures
   //
   //Serial.print(waterTemperature);
-
-  TurnAllLightsOn(255);
-  delay(5000);
+  if(currentMillis - pHPreviousMillis > pHInterval * 1000){
+    updatepH();
+    pHPreviousMillis = currentMillis;
+  }
+  else if(currentMillis - wTPreviousMillis > wTInterval * 1000 ){
+    updateWaterTemperature();
+    wTPreviousMillis = currentMillis;
+  }
+  else if(currentMillis - wAPreviousMillis > wAInterval * 1000){
+    updateAirTemperature();
+    wAPreviousMillis = currentMillis;
+  }
+  else if(currentMillis - tdsPreviousMillis> tdsInterval * 1000){
+    updateTDS();
+    tdsPreviousMillis = currentMillis;
+  }
+  else if(currentMillis - tPreviousMillis > tInterval * 1000){
+    Serial.print("g");
+    updateTurbidity();
+    tPreviousMillis = currentMillis;
+  }
 }
 
 int pHGetMiddleAnalog() {
@@ -494,7 +582,7 @@ void TurnAllLightsOn(float brightness) {
   lightStates[0] = filteredBrightness;
   lightStates[1] = filteredBrightness;
   delay(50);
-  Serial3.print((String)"{\"ls\":" + (String)lightStates[0] + (String)"}");
+  Serial3.print((String)"{\"lsr\":" + (String)lightStates[0] + ", \"lsb\":" + (String)lightStates[1] + (String)"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -504,7 +592,7 @@ void TurnAllLightsOff() {
   lightStates[0] = 0;
   lightStates[1] = 0;
   delay(50);
-  Serial3.print((String)"{\"ls\":" +  (String)lightStates[0] + (String)"}");
+  Serial3.print((String)"{\"lsr\":" + (String)lightStates[0] + ", \"lsb\":" + (String)lightStates[1] + (String)"}");
   //TODO write code that updates esp8266 through serial
 }
 

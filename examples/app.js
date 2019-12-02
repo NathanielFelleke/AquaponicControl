@@ -1,7 +1,7 @@
 const keys = require("./config/keys");
 const express = require("express");
 const app = express();
-const Light = require("./models/light-model")
+const Light = require("./models/light-model");
 
 //const scannerRoutes = require("./routes/scannerRoutes");
 const mongoose = require('mongoose');

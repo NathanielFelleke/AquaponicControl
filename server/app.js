@@ -8,6 +8,16 @@ const io = require('socket.io')(http);
 const ArrayList = require('arraylist');
 const mongoose = require('mongoose');
 
+mongoose.connect(keys.mongoDB.dbURI, {useNewUrlParser: true},function(error){
+    if(error)
+{
+    console.log(error);
+}
+else{
+    console.log("Connected to Database");
+}  
+ 
+});
 
 app.get('/public', function (req, res) {
     res.sendFile(__dirname + '/public/index.html');
@@ -34,6 +44,7 @@ io.on('connection', function (socket) {
     });
     socket.on("controlUpdate", function (data) {
         if(data){
+
             for(var i =0; i<userSockets.length; i++){
                 userSockets.get(i).emit("controlUpdate",data);
             }
