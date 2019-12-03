@@ -187,24 +187,6 @@ void loop() {
 }
 
 
-// will use sockets as they are easeir to code and faster https://github.com/timum-viw/socket.io-client
-/*String postRequest(String readData) {
-   // String readData;
-    String payload;
-    int httpCode;
-
-    HTTPClient http;
-
-    //TODO Create readData
-
-    http.begin(readURI);
-    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    httpCode = http.POST(readData);
-    payload = http.getString();
-    http.end();
-
-}
-*/
 void initMainControl() {
 
 }
@@ -224,6 +206,7 @@ void UpdateWantedpH(const char * payload, size_t length)
 {
     Serial.print("ph:" + (String)payload);
 }
+//TODO create many more handling methods
 
 void 
 

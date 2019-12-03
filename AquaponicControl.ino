@@ -171,6 +171,7 @@ const float VolumeOfEzoTubing;
 
 void setup() {
   Serial.begin(9600);
+  EZO.begin(9600);
   Server.begin(9600);
 
 
@@ -389,7 +390,7 @@ void loop() {
       pHDownAdjustment(pHDownAdjustmentcalculation());
     }
     else(pHReading < wantedpH - pHTolerance){
-        pHUpAdjustment(pHUpAdjustmentCalculation());
+      pHUpAdjustment(pHUpAdjustmentCalculation());
     }
     pHPreviousMillis = currentMillis;
   }
@@ -465,14 +466,14 @@ float cubicFeetToLiters(float x) {
   return x * cubicFeetToLitersConstant;
 }
 
-float pHUpAdjustmentCalculation(float wantedpH, float currentpH) {
+float pHUpAdjustmentCalculation() {
   //will return the mL needed to get wanted higher pH
   float pHUpVolume;
-
+  
   return pHUpVolume;
 }
 
-float pHDownAdjustmentcalculation(float wantedpH, float currentpH) {
+float pHDownAdjustmentcalculation() {
   //will return the ml needed to get lower pH
   float pHDownVolume;
 
@@ -728,6 +729,7 @@ void pHDownAdjustment(float volume){
     PrimeEzoPump();
     EZO.print((String)"D, " + (String)volume);
   }
+
 }
 
 void PrimeEzoPump()
