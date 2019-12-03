@@ -170,11 +170,11 @@ void setup() {
   //delay(2000);
   waterTemperatureSensor.checkSHT20();
   
-  pHInterval = EEPROM.readLong(20);
-  wTInterval = EEPROM.readLong(21);
-  wAInterval = EEPROM.readLong(22);
-  tdsInterval = EEPROM.readLong(23);
-  tInterval = EEPROM.readLong(24);
+  pHInterval = EEPROM.readLong(20) * 1000;
+  wTInterval = EEPROM.readLong(21) * 1000;
+  wAInterval = EEPROM.readLong(22) * 1000;
+  tdsInterval = EEPROM.readLong(23) * 1000;
+  tInterval = EEPROM.readLong(24) *1000;
   
   calStatus = EEPROM.read(3);
   if (calStatus > 7) {
@@ -282,15 +282,9 @@ void loop() {
       
       initServer();
     }
-
-
-
-
-
-
-    if (MasterSerialCommand.startsWith("CL")) {
-      MasterSerialCommand = MasterSerialCommand.substring(2);
-      CalLowpH = MasterSerialCommand.toFloat();
+    if (ServerSerialCommand.startsWith("CL")) {
+      ServerSerialCommand = ServerSerialCommand.substring(2);
+      CalLowpH = ServerSerialCommand.toFloat();
       CalLow = pHGetMiddleAnalog();
       calStatus = calStatus | 1;
       EEPROM.write(3, calStatus);
@@ -299,9 +293,9 @@ void loop() {
       pHTempInt = CalLowpH * 100.0;
       EEPROM.write(6, highByte(pHTempInt));
       EEPROM.write(7, lowByte(pHTempInt));
-    } else if (MasterSerialCommand.startsWith("CM")) {
-      MasterSerialCommand = MasterSerialCommand.substring(2);
-      CalMidpH = MasterSerialCommand.toFloat();
+    } else if (ServerSerialCommand.startsWith("CM")) {
+      ServerSerialCommand = ServerSerialCommand.substring(2);
+      CalMidpH = ServerSerialCommand.toFloat();
       CalMid = pHGetMiddleAnalog();
       calStatus = calStatus | 2;
       EEPROM.write(3, calStatus);
@@ -310,9 +304,9 @@ void loop() {
       pHTempInt = CalMidpH * 100.0;
       EEPROM.write(10, highByte(pHTempInt));
       EEPROM.write(11, lowByte(pHTempInt));
-    } else if (MasterSerialCommand.startsWith("CU")) {
-      MasterSerialCommand = MasterSerialCommand.substring(2);
-      CalHighpH = MasterSerialCommand.toFloat();
+    } else if (ServerSerialCommand.startsWith("CU")) {
+      ServerSerialCommand = ServerSerialCommand.substring(2);
+      CalHighpH = ServerSerialCommand.toFloat();
       CalHigh = pHGetMiddleAnalog();
       calStatus = calStatus | 4;
       EEPROM.write(3, calStatus);
@@ -321,9 +315,9 @@ void loop() {
       pHTempInt = CalHighpH * 100.0;
       EEPROM.write(14, highByte(pHTempInt));
       EEPROM.write(15, lowByte(pHTempInt));
-    } else if (MasterSerialCommand.startsWith("CTDS")) {
-      MasterSerialCommand = MasterSerialCommand.substring(4);
-      tdsCalibrationValue = MasterSerialCommand.toFloat();
+    } else if (ServerSerialCommand.startsWith("CTDS")) {
+      ServerSerialCommand = ServerSerialCommand.substring(4);
+      tdsCalibrationValue = ServerSerialCommand.toFloat();
       tdsSensor.calibrate(tdsCalibrationValue, 25);
     }
     ServerSerialCommand = "";
@@ -380,24 +374,23 @@ void loop() {
   //get temperatures
   //
   //Serial.print(waterTemperature);
-  if(currentMillis - p                                                    XHPreviousMillis > pHInterval * 1000){
+  if(currentMillis - pHPreviousMillis > pHInterval){
     updatepH();
     pHPreviousMillis = currentMillis;
   }
-  else if(currentMillis - wTPreviousMillis > wTInterval * 1000 ){
+  else if(currentMillis - wTPreviousMillis > wTInterval){
     updateWaterTemperature();
     wTPreviousMillis = currentMillis;
   }
-  else if(currentMillis - wAPreviousMillis > wAInterval * 1000){
+  else if(currentMillis - wAPreviousMillis > wAInterval){
     updateAirTemperature();
     wAPreviousMillis = currentMillis;
   }
-  else if(currentMillis - tdsPreviousMillis> tdsInterval * 1000){
+  else if(currentMillis - tdsPreviousMillis> tdsInterval){
     updateTDS();
     tdsPreviousMillis = currentMillis;
   }
-  else if(currentMillis - tPreviousMillis > tInterval * 1000){
-    Serial.print("g");
+  else if(currentMillis - tPreviousMillis > tInterval){
     updateTurbidity();
     tPreviousMillis = currentMillis;
   }

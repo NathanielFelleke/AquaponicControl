@@ -27,6 +27,7 @@ app.use(express.static('public'));
 var arduinoSocket;
 var userSockets = new ArrayList;
 io.on('connection', function (socket) {
+    
     console.log("c");
     socket.on("isControlSocket", function (data) {
         if (data) {
@@ -44,7 +45,6 @@ io.on('connection', function (socket) {
     });
     socket.on("controlUpdate", function (data) {
         if(data){
-
             for(var i =0; i<userSockets.length; i++){
                 userSockets.get(i).emit("controlUpdate",data);
             }
