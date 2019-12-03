@@ -12,6 +12,9 @@
 
 #include <DS1307.h>
 
+#define Server Serial3
+
+#define EZO Serial1
 
 //sensor pins
 #define pHSensor A0
@@ -37,6 +40,7 @@
 #define pumpControlPin 27
 #define mixerControlPin 28
 
+#define humidityControlPin 29
 //unit constants
 const float cubicFeetToLitersConstant = 28.3168466;
 
@@ -60,10 +64,10 @@ float pHReading;
 float pHReading1;
 float pHReading2;
 float pHReading3;
+float previouspHReading;
 int AV;
 float wantedpH;
-float allowedLowpH;
-float allowedHighpH;
+float pHTolerance = 0.4;
 
 unsigned int CalLow = 341;
 float CalLowpH = 4.00;
@@ -124,8 +128,7 @@ float allowedHighAirTemperature;
 float insideHumidity;
 float outsideHumidity;
 float wantedHumidity;
-float allowedLowHumidity;
-float allowedHighHumidity;
+float humidityTolerance = 5.0;
 
 //Liquid Fill
 
@@ -148,34 +151,36 @@ int mixerState = 0;
 
 // intervals
 
-long pHInterval = 200;  //interval in seconds
-long wTInterval = 240;
-long wAInterval = 240;
-long tdsInterval = 360;
-long tInterval = 360;
+unsigned long pHInterval = (long)EEPROM.readInt(20) * (long)1000;
+unsigned long wTInterval = (long)EEPROM.readInt(22) * (long)1000;
+unsigned long wAInterval = (long)EEPROM.readInt(24) * (long)1000;
+unsigned long tdsInterval = (long)EEPROM.readInt(26) * (long)1000;
+unsigned long tInterval = (long)EEPROM.readInt(28) * (long)1000;
 
 
-long pHPreviousMillis = 0;
-long wTPreviousMillis = 0;
-long wAPreviousMillis = 0;
-long tdsPreviousMillis = 0;
-long tPreviousMillis = 0;
+unsigned long pHPreviousMillis = 0;
+unsigned long wTPreviousMillis = 0;
+unsigned long wAPreviousMillis = 0;
+unsigned long tdsPreviousMillis = 0;
+unsigned long tPreviousMillis = 0;
+
+
+//Pumps
+
+const float VolumeOfEzoTubing;
+
 
 void setup() {
   Serial.begin(9600);
-  Serial3.begin(9600);
+  Server.begin(9600);
 
 
   waterTemperatureSensor.initSHT20();
   //delay(2000);
   waterTemperatureSensor.checkSHT20();
-  
-  pHInterval = EEPROM.readLong(20) * 1000;
-  wTInterval = EEPROM.readLong(21) * 1000;
-  wAInterval = EEPROM.readLong(22) * 1000;
-  tdsInterval = EEPROM.readLong(23) * 1000;
-  tInterval = EEPROM.readLong(24) *1000;
-  
+
+ 
+  Serial.println(pHInterval);
   calStatus = EEPROM.read(3);
   if (calStatus > 7) {
     calStatus = 0;
@@ -236,6 +241,12 @@ void setup() {
   Serial.print("   ");
   Serial.println(CalHighpH);
 
+  
+  wantedHumidity = (float)EEPROM.read(30);
+
+  wantedpH = EEPROM.readFloat(31);
+
+
   tdsSensor.setKvalueAddress(16); //sets the EEPROM address for the tds sensor k value
   tdsSensor.setPin(tdsSensorPin);
   tdsSensor.setAref(5.0);
@@ -251,7 +262,6 @@ void setup() {
   // TODO need to check if it is okay to use the method so early in their processes 
   analogWrite(redLightPin, lightStates[0]);
   analogWrite(blueLightPin, lightStates[1]);
-
   updateAll();
 }
 
@@ -267,10 +277,10 @@ void loop() {
   //time update
 
 
-  while (Serial3.available()) {
+  while (Server.available()) {
     delay(4);
-    if (Serial3.available() > 0) {
-      char c = Serial3.read();
+    if (Server.available() > 0) {
+      char c = Server.read();
       ServerSerialCommand += c; //updating the ServerSerialCommand
     }
   }
@@ -376,6 +386,12 @@ void loop() {
   //Serial.print(waterTemperature);
   if(currentMillis - pHPreviousMillis > pHInterval){
     updatepH();
+    if(pHReading > wantedpH + pHTolerance){
+      pHDownAdjustment(pHDownAdjustmentcalculation());
+    }
+    else(pHReading < wantedpH - pHTolerance){
+        pHUpAdjustment(pHUpAdjustmentCalculation());
+    }
     pHPreviousMillis = currentMillis;
   }
   else if(currentMillis - wTPreviousMillis > wTInterval){
@@ -385,6 +401,10 @@ void loop() {
   else if(currentMillis - wAPreviousMillis > wAInterval){
     updateAirTemperature();
     wAPreviousMillis = currentMillis;
+    if(insideHumidity<wantedHumidity - humidityTolerance){
+      digitalWrite(humidityControlPin, HIGH);
+    }
+    
   }
   else if(currentMillis - tdsPreviousMillis> tdsInterval){
     updateTDS();
@@ -463,7 +483,7 @@ float pHDownAdjustmentcalculation(float wantedpH, float currentpH) {
 
 
 void updatepH() {
-
+  previouspHReading = pHReading;
   AV = pHGetMiddleAnalog();
   if (AV > CalMid) {
     pHReading = CalMidpH + (CalHighpH - CalMidpH) / (CalHigh - CalMid) * (AV - CalMid);
@@ -478,10 +498,10 @@ void updatepH() {
     pHReading1 = pHReading;
     Serial.print("pH = ");
     Serial.println(pHReading);
-    Serial3.print((String)"{\"ph\":" + (String)pHReading + (String)"}");
+    Server.print((String)"{\"ph\":" + (String)pHReading + (String)"}");
   } // End of if PHReading > 2 && PHReading < 12
   else {    // "{\"foo\":\"bar\"}"
-    Serial3.print("{\"ph\":\"error\"}");
+    Server.print("{\"ph\":\"error\"}");
     Serial.println("pH Probe Error");
   }
   delay(50);
@@ -496,21 +516,21 @@ void updateAirTemperature() {
   insideHumidity = insideTemperatureSensor.getHumidity();
   outsideHumidity = outsideTemperatureSensor.getHumidity();
   delay(50);
-  Serial3.print((String)"{\"iat\":" + (String)"\"" + (String)insideAirTemperature + (String)"\"}");
+  Server.print((String)"{\"iat\":" + (String)"\"" + (String)insideAirTemperature + (String)"\"}");
   delay(50);
    // TODO check to see if works
-  Serial3.print((String)"{\"ih\":" + (String)"\"" + (String)insideHumidity + (String)"\"}");
+  Server.print((String)"{\"ih\":" + (String)"\"" + (String)insideHumidity + (String)"\"}");
   delay(50);
-  Serial3.print((String)"{\"oat\":" + (String)"\"" + (String)outsideAirTemperature + (String)"\"}");
+  Server.print((String)"{\"oat\":" + (String)"\"" + (String)outsideAirTemperature + (String)"\"}");
   delay(50);
-  Serial3.print((String)"{\"oh\":" + (String)"\"" + (String)outsideHumidity + (String)"\"}");
+  Server.print((String)"{\"oh\":" + (String)"\"" + (String)outsideHumidity + (String)"\"}");
   //TODO write code that updates esp8266 through serial
 }
 
 void updateWaterTemperature() {
   waterTemperature = waterTemperatureSensor.readTemperature();
   delay(50);
-  Serial3.print((String)"{\"wt\":" + (String)waterTemperature + (String)"}");
+  Server.print((String)"{\"wt\":" + (String)waterTemperature + (String)"}");
   // TODO check to see if it works
   //TODO write code that updates esp8266 through serial
 }
@@ -518,7 +538,7 @@ void updateWaterTemperature() {
 void updateTurbidity() {
   turbidityVoltage = turbidityGetMiddleAnalog(); //TODO check to see if it works
   delay(50);
-  Serial3.print((String)"{\"tv\":" + (String)turbidityVoltage + (String)"}");
+  Server.print((String)"{\"tv\":" + (String)turbidityVoltage + (String)"}");
   // TODO check if it works
   //TODO write code that updates esp8266 through serial
 
@@ -527,7 +547,7 @@ void updateTurbidity() {
 void updateLiquidFilled() {
   liquidFilled = digitalRead(liquidFilledSensor);
   delay(50);
-  Serial3.print((String)"{\"lf\":" + (String)liquidFilled + (String)"}");
+  Server.print((String)"{\"lf\":" + (String)liquidFilled + (String)"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -537,7 +557,7 @@ void updateTDS() {
   tdsValue = tdsSensor.getTdsValue();
   ecValue = tdsSensor.getEcValue();
   delay(50);
-  Serial3.print((String)"{\"tds\":" + (String)tdsValue + (String)"}");
+  Server.print((String)"{\"tds\":" + (String)tdsValue + (String)"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -575,7 +595,7 @@ void TurnAllLightsOn(float brightness) {
   lightStates[0] = filteredBrightness;
   lightStates[1] = filteredBrightness;
   delay(50);
-  Serial3.print((String)"{\"lsr\":" + (String)lightStates[0] + ", \"lsb\":" + (String)lightStates[1] + (String)"}");
+  Server.print((String)"{\"lsr\":" + (String)lightStates[0] + ", \"lsb\":" + (String)lightStates[1] + (String)"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -585,7 +605,7 @@ void TurnAllLightsOff() {
   lightStates[0] = 0;
   lightStates[1] = 0;
   delay(50);
-  Serial3.print((String)"{\"lsr\":" + (String)lightStates[0] + ", \"lsb\":" + (String)lightStates[1] + (String)"}");
+  Server.print((String)"{\"lsr\":" + (String)lightStates[0] + ", \"lsb\":" + (String)lightStates[1] + (String)"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -608,7 +628,7 @@ void TurnRedLightsOn(float brightness) {
   filteredBrightness = analogBrightnessValue / 2.55;
   lightStates[0] = filteredBrightness;
   delay(50);
-  Serial3.print((String)"{\"lsr\":"+ (String)lightStates[0] + (String)"}");
+  Server.print((String)"{\"lsr\":"+ (String)lightStates[0] + (String)"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -616,7 +636,7 @@ void TurnRedLightsOff() {
   digitalWrite(redLightPin, LOW);
   lightStates[0] = 0;
   delay(50);
-  Serial3.print((String)"{\"lsr\":"+ (String)lightStates[0] + (String)"}");
+  Server.print((String)"{\"lsr\":"+ (String)lightStates[0] + (String)"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -638,7 +658,7 @@ void TurnBlueLightsOn(float brightness) {
   filteredBrightness = analogBrightnessValue / 2.55;
   lightStates[0] = filteredBrightness;
   delay(50);
-  Serial3.print((String)"{\"lsb\":" + (String)lightStates[1] + (String)"}");
+  Server.print((String)"{\"lsb\":" + (String)lightStates[1] + (String)"}");
  
   //TODO write code that updates esp8266 through serial
 }
@@ -647,7 +667,7 @@ void TurnBlueLightsOff() {
   digitalWrite(blueLightPin, LOW);
   lightStates[1] = 0;
   delay(50);
-  Serial3.print((String)"{\"lsb\":" + (String)lightStates[1] + (String)"}");
+  Server.print((String)"{\"lsb\":" + (String)lightStates[1] + (String)"}");
   //TODO write code that updates esp8266 through serial
 }
 
@@ -656,28 +676,28 @@ void TurnPumpOn() {
   digitalWrite(pumpControlPin, HIGH);
   pumpState = 1;
   delay(50);
-  Serial3.print((String)"{\"ps\":" + (String)pumpState + (String)"}");
+  Server.print((String)"{\"ps\":" + (String)pumpState + (String)"}");
 }
 
 void TurnPumpOff() {
   digitalWrite(pumpControlPin, LOW);
   pumpState = 0;
   delay(50);
-  Serial3.print((String)"{\"ps\":" + (String)pumpState + (String)"}");
+  Server.print((String)"{\"ps\":" + (String)pumpState + (String)"}");
 }
 
 void TurnMixerOn() {
   digitalWrite(mixerControlPin, HIGH);
   mixerState = 1;
   delay(50);
-  Serial3.print((String)"{\"ms\":" +  (String)mixerState + (String)"}");
+  Server.print((String)"{\"ms\":" +  (String)mixerState + (String)"}");
 }
 
 void TurnMixerOff() {
   digitalWrite(mixerControlPin, LOW);
   mixerState = 0;
   delay(50);
-  Serial3.print((String)"{\"ms\":"  + (String)mixerState + (String)"}");
+  Server.print((String)"{\"ms\":"  + (String)mixerState + (String)"}");
 }
 //Time Methods
 
@@ -695,5 +715,23 @@ void setTime(int sec, int min, int hour, int dow, int date, int month, int year)
 }
 
 void initServer() {
-  Serial3.write("");
+  Server.write("");
+}
+
+
+void pHUpAdjustment(float volume){
+
+}
+
+void pHDownAdjustment(float volume){
+  if(pHDownPump == "EZO")
+  {
+    PrimeEzoPump();
+    EZO.print((String)"D, " + (String)volume);
+  }
+}
+
+void PrimeEzoPump()
+{
+  EZO.print((String)"D, " + (String)VolumeOfEzoTubing);
 }

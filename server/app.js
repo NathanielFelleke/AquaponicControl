@@ -44,7 +44,10 @@ io.on('connection', function (socket) {
         arduinoSocket.emit("wantedpH", data);
     });
     socket.on("controlUpdate", function (data) {
+        console.log("h");
         if(data){
+            
+            console.log(data);
             for(var i =0; i<userSockets.length; i++){
                 userSockets.get(i).emit("controlUpdate",data);
             }

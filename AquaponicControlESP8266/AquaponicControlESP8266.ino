@@ -222,9 +222,10 @@ void formatJSON(){
 
 void UpdateWantedpH(const char * payload, size_t length)
 {
-
-    Serial.print(payload);
+    Serial.print("ph:" + (String)payload);
 }
+
+void 
 
 void connectEvent(const char * payload, size_t length)
 {
