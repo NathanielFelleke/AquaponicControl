@@ -70,14 +70,13 @@ float wantedpH;
 float pHTolerance = 0.4;
 
 unsigned int CalLow = 341;
-float CalLowpH = 4.00;
+float CalLowpH = 4.01;
 unsigned int CalMid = 398;
-float CalMidpH = 6.85;
+float CalMidpH = 6.86;
 unsigned int CalHigh = 443;
-float CalHighpH = 9.17;
-byte HighByte;
-byte LowByte;
-byte calStatus;
+float CalHighpH = 9.18;
+//byte LowByte;
+//byte calStatus;
 unsigned int pHTempInt;
 bool pHEnabled = true;
 
@@ -182,23 +181,35 @@ void setup() {
  
   Serial.println(pHInterval);
   calStatus = EEPROM.read(3);
+  //for transitioning eeprom for ph to 35 and above will leave values 1 to 15 open
+  EEPROM.write(35, calStatus);
+  EEPROM.writeInt(36, CalLow);
+  EEPROM.writeFloat(38, CalLowpH);
+  EEPROM.writeInt(42, CalMid);
+  EEPROM.writeFloat(44, CalLowpH);
+  EEPROM.writeInt(48, CalHigh);
+  EEPROM.writeFloat(50, CalHighpH);
+  //TODO remove after first run
   if (calStatus > 7) {
     calStatus = 0;
     EEPROM.write(3, calStatus);
   }
   Serial.println(calStatus);
   if ((calStatus & 1) == 1) {
-    HighByte = EEPROM.read(4);
+    CalLow = EEPROM.readInt(36);
+    CalLowpH = EEPROM.readFloat(38);
+    /*HighByte = EEPROM.read(4);
     LowByte = EEPROM.read(5);
     if (HighByte + LowByte < 510) {
       CalLow = (HighByte << 8) + LowByte;
     }
+    EEPROM.write()
     HighByte = EEPROM.read(6);
     LowByte = EEPROM.read(7);
     if (HighByte + LowByte < 510) {
       pHTempInt = (HighByte << 8) + LowByte;
       CalLowpH = pHTempInt / 100.0;
-    }
+    }*/
   }
   Serial.print("Low pH: ");
   Serial.print(CalLow);
@@ -206,7 +217,9 @@ void setup() {
   Serial.println(CalLowpH);
 
   if ((calStatus & 2) == 2) {
-    HighByte = EEPROM.read(8);
+    CalMid = EEPROM.readInt(42);
+    CalLowpH = EEPROM.readFloat(44);
+    /* HighByte = EEPROM.read(8);
     LowByte = EEPROM.read(9);
     if (HighByte + LowByte < 510) {
       CalMid = (HighByte << 8) + LowByte;
@@ -216,14 +229,16 @@ void setup() {
     if (HighByte + LowByte < 510) {
       pHTempInt = (HighByte << 8) + LowByte;
       CalMidpH = pHTempInt / 100.0;
-    }
+    }*/
   }
   Serial.print("Mid pH: ");
   Serial.print(CalMid);
   Serial.print("   ");
   Serial.println(CalMidpH);
   if ((calStatus & 4) == 4) {
-    HighByte = EEPROM.read(12);
+    CalHigh = EEPROM.readInt(48);
+    CalHighpH = EEPROM.readFloat(50);
+    /*HighByte = EEPROM.read(12);
     LowByte = EEPROM.read(13);
     if (HighByte + LowByte < 510) {
       CalHigh = (HighByte << 8) + LowByte;
@@ -234,7 +249,7 @@ void setup() {
     if (HighByte + LowByte < 510) {
       pHTempInt = (HighByte << 8) + LowByte;
       CalHighpH = pHTempInt / 100.0;
-    }
+    }*/
   }
   Serial.print("High pH: ");
   Serial.print(CalHigh);
@@ -255,6 +270,7 @@ void setup() {
 
   pinMode(liquidFilledSensor, INPUT);
 
+  pinMode(humidityControlPin,OUTPUT);
   pinMode(redLightPin, OUTPUT);
   pinMode(blueLightPin, OUTPUT);
   // TurnRedLightsOn(lightStates[0]);d]
@@ -292,46 +308,43 @@ void loop() {
       
       initServer();
     }
+    if (ServerSerialCommand.length() > 0) {
+    ServerSerialCommand.toUpperCase();
+    Serial.println(ServerSerialCommand);
     if (ServerSerialCommand.startsWith("CL")) {
       ServerSerialCommand = ServerSerialCommand.substring(2);
       CalLowpH = ServerSerialCommand.toFloat();
       CalLow = pHGetMiddleAnalog();
       calStatus = calStatus | 1;
-      EEPROM.write(3, calStatus);
-      EEPROM.write(4, highByte(CalLow));
-      EEPROM.write(5, lowByte(CalLow));
-      pHTempInt = CalLowpH * 100.0;
-      EEPROM.write(6, highByte(pHTempInt));
-      EEPROM.write(7, lowByte(pHTempInt));
+      EEPROM.write(35, calStatus);
+      EEPROM.writeInt(36, CalLow);
+      
+      EEPROM.writeFloat(38, CalLowpH);
+      
     } else if (ServerSerialCommand.startsWith("CM")) {
       ServerSerialCommand = ServerSerialCommand.substring(2);
       CalMidpH = ServerSerialCommand.toFloat();
       CalMid = pHGetMiddleAnalog();
       calStatus = calStatus | 2;
-      EEPROM.write(3, calStatus);
-      EEPROM.write(8, highByte(CalMid));
-      EEPROM.write(9, lowByte(CalMid));
-      pHTempInt = CalMidpH * 100.0;
-      EEPROM.write(10, highByte(pHTempInt));
-      EEPROM.write(11, lowByte(pHTempInt));
+      EEPROM.write(35, calStatus);
+      EEPROM.writeInt(42, CalMid);
+      EEPROM.writeFloat(44, CalLowpH);
+      
     } else if (ServerSerialCommand.startsWith("CU")) {
       ServerSerialCommand = ServerSerialCommand.substring(2);
       CalHighpH = ServerSerialCommand.toFloat();
       CalHigh = pHGetMiddleAnalog();
       calStatus = calStatus | 4;
-      EEPROM.write(3, calStatus);
-      EEPROM.write(12, highByte(CalHigh));
-      EEPROM.write(13, lowByte(CalHigh));
-      pHTempInt = CalHighpH * 100.0;
-      EEPROM.write(14, highByte(pHTempInt));
-      EEPROM.write(15, lowByte(pHTempInt));
+      EEPROM.write(35, calStatus);
+      EEPROM.writeInt(48, CalHigh);
+      EEPROM.writeFloat(50, CalHighpH);
     } else if (ServerSerialCommand.startsWith("CTDS")) {
       ServerSerialCommand = ServerSerialCommand.substring(4);
       tdsCalibrationValue = ServerSerialCommand.toFloat();
       tdsSensor.calibrate(tdsCalibrationValue, 25);
     }
     ServerSerialCommand = "";
-  }
+  } 
 
   //checking for updates from the computer
   if (MasterSerialCommand.length() > 0) {
@@ -342,34 +355,28 @@ void loop() {
       CalLowpH = MasterSerialCommand.toFloat();
       CalLow = pHGetMiddleAnalog();
       calStatus = calStatus | 1;
-      EEPROM.write(3, calStatus);
-      EEPROM.write(4, highByte(CalLow));
-      EEPROM.write(5, lowByte(CalLow));
-      pHTempInt = CalLowpH * 100.0;
-      EEPROM.write(6, highByte(pHTempInt));
-      EEPROM.write(7, lowByte(pHTempInt));
+      EEPROM.write(35, calStatus);
+      EEPROM.writeInt(36, CalLow);
+      
+      EEPROM.writeFloat(38, CalLowpH);
+      
     } else if (MasterSerialCommand.startsWith("CM")) {
       MasterSerialCommand = MasterSerialCommand.substring(2);
       CalMidpH = MasterSerialCommand.toFloat();
       CalMid = pHGetMiddleAnalog();
       calStatus = calStatus | 2;
-      EEPROM.write(3, calStatus);
-      EEPROM.write(8, highByte(CalMid));
-      EEPROM.write(9, lowByte(CalMid));
-      pHTempInt = CalMidpH * 100.0;
-      EEPROM.write(10, highByte(pHTempInt));
-      EEPROM.write(11, lowByte(pHTempInt));
+      EEPROM.write(35, calStatus);
+      EEPROM.writeInt(42, CalMid);
+      EEPROM.writeFloat(44, CalLowpH);
+      
     } else if (MasterSerialCommand.startsWith("CU")) {
       MasterSerialCommand = MasterSerialCommand.substring(2);
       CalHighpH = MasterSerialCommand.toFloat();
       CalHigh = pHGetMiddleAnalog();
       calStatus = calStatus | 4;
-      EEPROM.write(3, calStatus);
-      EEPROM.write(12, highByte(CalHigh));
-      EEPROM.write(13, lowByte(CalHigh));
-      pHTempInt = CalHighpH * 100.0;
-      EEPROM.write(14, highByte(pHTempInt));
-      EEPROM.write(15, lowByte(pHTempInt));
+      EEPROM.write(35, calStatus);
+      EEPROM.writeInt(48, CalHigh);
+      EEPROM.writeFloat(50, CalHighpH);
     } else if (MasterSerialCommand.startsWith("CTDS")) {
       MasterSerialCommand = MasterSerialCommand.substring(4);
       tdsCalibrationValue = MasterSerialCommand.toFloat();
@@ -413,6 +420,17 @@ void loop() {
   else if(currentMillis - tPreviousMillis > tInterval){
     updateTurbidity();
     tPreviousMillis = currentMillis;
+  }
+
+  if(currentMillis - rtcPreviousMillis > rtcInterval){
+    RTC.
+  }
+
+  if(pumpState){
+    updateLiquidFilled();
+    if(liquidFilled){
+      TurnPumpOff();
+    }
   }
 }
 
@@ -545,9 +563,13 @@ void updateTurbidity() {
 }
 
 void updateLiquidFilled() {
+  previousLiquidFilled = liquidFilled;
   liquidFilled = digitalRead(liquidFilledSensor);
   delay(50);
-  Server.print((String)"{\"lf\":" + (String)liquidFilled + (String)"}");
+  if(previousLiquidFiled != liquidFilled){
+    Server.print((String)"{\"lf\":" + (String)liquidFilled + (String)"}");
+  }
+  
   //TODO write code that updates esp8266 through serial
 }
 
