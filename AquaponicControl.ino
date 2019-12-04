@@ -76,7 +76,7 @@ float CalMidpH = 6.86;
 unsigned int CalHigh = 443;
 float CalHighpH = 9.18;
 //byte LowByte;
-//byte calStatus;
+byte calStatus;
 unsigned int pHTempInt;
 bool pHEnabled = true;
 
@@ -132,6 +132,7 @@ float humidityTolerance = 5.0;
 //Liquid Fill
 
 int liquidFilled = 0;
+int previousLiquidFilled= 0;
 //Water Level
 
 //CC
@@ -155,13 +156,14 @@ unsigned long wTInterval = (long)EEPROM.readInt(22) * (long)1000;
 unsigned long wAInterval = (long)EEPROM.readInt(24) * (long)1000;
 unsigned long tdsInterval = (long)EEPROM.readInt(26) * (long)1000;
 unsigned long tInterval = (long)EEPROM.readInt(28) * (long)1000;
-
+unsigned long rtcInterval = 60000;
 
 unsigned long pHPreviousMillis = 0;
 unsigned long wTPreviousMillis = 0;
 unsigned long wAPreviousMillis = 0;
 unsigned long tdsPreviousMillis = 0;
 unsigned long tPreviousMillis = 0;
+unsigned long rtcPreviousMillis = 0;
 
 
 //Pumps
@@ -178,18 +180,7 @@ void setup() {
   //delay(2000);
   waterTemperatureSensor.checkSHT20();
 
- 
-  Serial.println(pHInterval);
-  calStatus = EEPROM.read(3);
-  //for transitioning eeprom for ph to 35 and above will leave values 1 to 15 open
-  EEPROM.write(35, calStatus);
-  EEPROM.writeInt(36, CalLow);
-  EEPROM.writeFloat(38, CalLowpH);
-  EEPROM.writeInt(42, CalMid);
-  EEPROM.writeFloat(44, CalLowpH);
-  EEPROM.writeInt(48, CalHigh);
-  EEPROM.writeFloat(50, CalHighpH);
-  //TODO remove after first run
+
   if (calStatus > 7) {
     calStatus = 0;
     EEPROM.write(3, calStatus);
@@ -198,18 +189,7 @@ void setup() {
   if ((calStatus & 1) == 1) {
     CalLow = EEPROM.readInt(36);
     CalLowpH = EEPROM.readFloat(38);
-    /*HighByte = EEPROM.read(4);
-    LowByte = EEPROM.read(5);
-    if (HighByte + LowByte < 510) {
-      CalLow = (HighByte << 8) + LowByte;
-    }
-    EEPROM.write()
-    HighByte = EEPROM.read(6);
-    LowByte = EEPROM.read(7);
-    if (HighByte + LowByte < 510) {
-      pHTempInt = (HighByte << 8) + LowByte;
-      CalLowpH = pHTempInt / 100.0;
-    }*/
+    
   }
   Serial.print("Low pH: ");
   Serial.print(CalLow);
@@ -219,17 +199,7 @@ void setup() {
   if ((calStatus & 2) == 2) {
     CalMid = EEPROM.readInt(42);
     CalLowpH = EEPROM.readFloat(44);
-    /* HighByte = EEPROM.read(8);
-    LowByte = EEPROM.read(9);
-    if (HighByte + LowByte < 510) {
-      CalMid = (HighByte << 8) + LowByte;
-    }
-    HighByte = EEPROM.read(10);
-    LowByte = EEPROM.read(11);
-    if (HighByte + LowByte < 510) {
-      pHTempInt = (HighByte << 8) + LowByte;
-      CalMidpH = pHTempInt / 100.0;
-    }*/
+    
   }
   Serial.print("Mid pH: ");
   Serial.print(CalMid);
@@ -238,18 +208,7 @@ void setup() {
   if ((calStatus & 4) == 4) {
     CalHigh = EEPROM.readInt(48);
     CalHighpH = EEPROM.readFloat(50);
-    /*HighByte = EEPROM.read(12);
-    LowByte = EEPROM.read(13);
-    if (HighByte + LowByte < 510) {
-      CalHigh = (HighByte << 8) + LowByte;
-    }
-    Serial.println(CalHigh);
-    HighByte = EEPROM.read(14);
-    LowByte = EEPROM.read(15);
-    if (HighByte + LowByte < 510) {
-      pHTempInt = (HighByte << 8) + LowByte;
-      CalHighpH = pHTempInt / 100.0;
-    }*/
+    
   }
   Serial.print("High pH: ");
   Serial.print(CalHigh);
@@ -308,9 +267,7 @@ void loop() {
       
       initServer();
     }
-    if (ServerSerialCommand.length() > 0) {
-    ServerSerialCommand.toUpperCase();
-    Serial.println(ServerSerialCommand);
+    
     if (ServerSerialCommand.startsWith("CL")) {
       ServerSerialCommand = ServerSerialCommand.substring(2);
       CalLowpH = ServerSerialCommand.toFloat();
@@ -357,7 +314,6 @@ void loop() {
       calStatus = calStatus | 1;
       EEPROM.write(35, calStatus);
       EEPROM.writeInt(36, CalLow);
-      
       EEPROM.writeFloat(38, CalLowpH);
       
     } else if (MasterSerialCommand.startsWith("CM")) {
@@ -396,7 +352,7 @@ void loop() {
     if(pHReading > wantedpH + pHTolerance){
       pHDownAdjustment(pHDownAdjustmentcalculation());
     }
-    else(pHReading < wantedpH - pHTolerance){
+    else if(pHReading < wantedpH - pHTolerance){
       pHUpAdjustment(pHUpAdjustmentCalculation());
     }
     pHPreviousMillis = currentMillis;
@@ -408,7 +364,7 @@ void loop() {
   else if(currentMillis - wAPreviousMillis > wAInterval){
     updateAirTemperature();
     wAPreviousMillis = currentMillis;
-    if(insideHumidity<wantedHumidity - humidityTolerance){
+    if(insideHumidity< wantedHumidity - humidityTolerance){
       digitalWrite(humidityControlPin, HIGH);
     }
     
@@ -423,7 +379,8 @@ void loop() {
   }
 
   if(currentMillis - rtcPreviousMillis > rtcInterval){
-    RTC.
+    //RTC.
+    rtcPreviousMillis = currentMillis;
   }
 
   if(pumpState){
@@ -566,7 +523,7 @@ void updateLiquidFilled() {
   previousLiquidFilled = liquidFilled;
   liquidFilled = digitalRead(liquidFilledSensor);
   delay(50);
-  if(previousLiquidFiled != liquidFilled){
+  if(previousLiquidFilled != liquidFilled){
     Server.print((String)"{\"lf\":" + (String)liquidFilled + (String)"}");
   }
   
@@ -746,11 +703,11 @@ void pHUpAdjustment(float volume){
 }
 
 void pHDownAdjustment(float volume){
-  if(pHDownPump == "EZO")
-  {
-    PrimeEzoPump();
-    EZO.print((String)"D, " + (String)volume);
-  }
+  //if(pHDownPump == "EZO")
+  //{
+    //PrimeEzoPump();
+    //EZO.print((String)"D, " + (String)volume);
+  //}
 
 }
 
