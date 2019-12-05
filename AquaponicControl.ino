@@ -379,10 +379,12 @@ void loop() {
   }
 
   if(currentMillis - rtcPreviousMillis > rtcInterval){
-    //RTC.
+    RTC.get(rtc,true);
     rtcPreviousMillis = currentMillis;
   }
 
+
+  
   if(pumpState){
     updateLiquidFilled();
     if(liquidFilled){
