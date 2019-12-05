@@ -12,6 +12,10 @@
 
 #include <DS1307.h>
 
+#include <HCSR04.h>
+
+
+
 #define Server Serial3
 
 #define EZO Serial1
@@ -30,6 +34,10 @@
 #define turbiditySensorPin A2
 
 #define liquidFilledSensor 23
+
+#define distanceTriggerPin 13
+
+#define distanceEchoPin 12
 
 //control pins
 
@@ -135,6 +143,11 @@ int liquidFilled = 0;
 int previousLiquidFilled= 0;
 //Water Level
 
+float distance;
+float waterLevel;
+float heightOfSensor = EEPROM.readFloat(3); //TODO write the code for updating the height of the sensor
+UltraSonicDistanceSensor distanceSensor(distanceTriggerPin, distanceEchoPin);
+
 //CC
 
 
@@ -156,7 +169,9 @@ unsigned long wTInterval = (long)EEPROM.readInt(22) * (long)1000;
 unsigned long wAInterval = (long)EEPROM.readInt(24) * (long)1000;
 unsigned long tdsInterval = (long)EEPROM.readInt(26) * (long)1000;
 unsigned long tInterval = (long)EEPROM.readInt(28) * (long)1000;
-unsigned long rtcInterval = 60000;
+unsigned long rtcInterval = (long)60000;
+unsigned long distanceSensorInterval = (long)60000;
+long waterDrainingInterval = (long)EEPROM.readInt(7) * (long)1000;
 
 unsigned long pHPreviousMillis = 0;
 unsigned long wTPreviousMillis = 0;
@@ -164,7 +179,8 @@ unsigned long wAPreviousMillis = 0;
 unsigned long tdsPreviousMillis = 0;
 unsigned long tPreviousMillis = 0;
 unsigned long rtcPreviousMillis = 0;
-
+unsigned long distanceSensorPreviousMillis  = 0;
+unsigned long temporaryDistanceSensorPreviousMillis;
 
 //Pumps
 
@@ -175,6 +191,9 @@ void setup() {
   EZO.begin(9600);
   Server.begin(9600);
 
+  //EEPROM.writeFloat(3,2.5);
+  //EEPROM.writeInt(7, 300);
+//TODO remove after writing once
 
   waterTemperatureSensor.initSHT20();
   //delay(2000);
@@ -377,6 +396,10 @@ void loop() {
     updateTurbidity();
     tPreviousMillis = currentMillis;
   }
+  else if(currentMillis - distanceSensorPreviousMillis > distanceSensorInterval || currentMillis - temporaryDistanceSensorPreviousMillis > waterDrainingInterval){
+    updateWaterLevel();
+    distanceSensorPreviousMillis = currentMillis;
+  }
 
   if(currentMillis - rtcPreviousMillis > rtcInterval){
     RTC.get(rtc,true);
@@ -389,6 +412,9 @@ void loop() {
     updateLiquidFilled();
     if(liquidFilled){
       TurnPumpOff();
+      temporaryDistanceSensorPreviousMillis = currentMillis;
+      
+      updateWaterLevel();
     }
   }
 }
@@ -513,7 +539,7 @@ void updateWaterTemperature() {
 }
 
 void updateTurbidity() {
-  turbidityVoltage = turbidityGetMiddleAnalog(); //TODO check to see if it works
+  turbidityVoltage = turbidityGetMiddleAnalog() * (5.0 / 1024.0); //TODO check to see if it works
   delay(50);
   Server.print((String)"{\"tv\":" + (String)turbidityVoltage + (String)"}");
   // TODO check if it works
@@ -542,12 +568,18 @@ void updateTDS() {
   //TODO write code that updates esp8266 through serial
 }
 
+void updateWaterLevel(){
+  distance = distanceSensor.measureDistanceCm()/100;
+  waterLevel = heightOfSensor - distance;
+  Server.print((String)"{\"wl\":" + (String)waterLevel + (String)"}");
+}
 void updateAll() {
   updateWaterTemperature();
   updateAirTemperature();
   updatepH();
   updateTurbidity();
   updateTDS();
+  updateWaterLevel();
 }
 
 //Peristaltic Pump Control Functions
