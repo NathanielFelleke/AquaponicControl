@@ -62,10 +62,10 @@ String WaterTestSerialCommand; //serial input from an arduino controlling the wa
 String FeederSerialCommand; //Serial input from arduino controlling the automatic feeders for the fish (unused for now)
 
 //demensions
-const float containerWidth = 7;
-const float containerLength = 7;
-const float containerHeight = 4;
-const float wantedWaterHeight = 2;
+float containerWidth = 7;
+float containerLength = 7;
+float containerHeight = 4;
+float wantedWaterHeight = 2;
 
 //pH Variables
 float pHReading;
@@ -83,7 +83,6 @@ unsigned int CalMid = 398;
 float CalMidpH = 6.86;
 unsigned int CalHigh = 443;
 float CalHighpH = 9.18;
-//byte LowByte;
 byte calStatus;
 unsigned int pHTempInt;
 bool pHEnabled = true;
@@ -106,7 +105,6 @@ float tdsValue;
 float ecValue;
 float allowedLowTDS;
 float allowedHighTDS;
-
 
 float tdsCalibrationValue;
 //Temperature and Humidity Variables
@@ -150,13 +148,18 @@ UltraSonicDistanceSensor distanceSensor(distanceTriggerPin, distanceEchoPin);
 
 //CC
 
-
+int HourLightOn = EEPROM.readInt(9);
+int HourLightOff = EEPROM.readInt(11);
+int AutomaticLightControl = true;
 //States 
 
 float lightStates[] = {
   100,
   100
 }; //Red State then Blue State
+
+float 
+
 
 int pumpState = 0;
 
@@ -286,7 +289,6 @@ void loop() {
       
       initServer();
     }
-    
     if (ServerSerialCommand.startsWith("CL")) {
       ServerSerialCommand = ServerSerialCommand.substring(2);
       CalLowpH = ServerSerialCommand.toFloat();
@@ -360,13 +362,12 @@ void loop() {
     MasterSerialCommand = "";
   } // End of if (MasterSerialCommand.length() >0 )
 
-
-
   //update values
   //get temperatures
   //
   //Serial.print(waterTemperature);
   if(currentMillis - pumpPreviousMillis > pumpInterval){
+    updateWaterLevel();
     TurnPumpOn();
     pumpPreviousMillis = currentMillis
   }
@@ -416,9 +417,8 @@ void loop() {
     updateLiquidFilled();
     if(liquidFilled){
       TurnPumpOff();
-      temporaryDistanceSensorPreviousMillis = currentMillis;
-      
       updateWaterLevel();
+      temporaryDistanceSensorPreviousMillis = currentMillis;
     }
   }
 }
