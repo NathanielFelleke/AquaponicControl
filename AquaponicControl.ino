@@ -48,7 +48,15 @@
 #define pumpControlPin 27
 #define mixerControlPin 28
 
+
 #define humidityControlPin 29
+
+
+//EEPROM Variables 
+
+
+
+
 //unit constants
 const float cubicFeetToLitersConstant = 28.3168466;
 
@@ -149,7 +157,10 @@ UltraSonicDistanceSensor distanceSensor(distanceTriggerPin, distanceEchoPin);
 //CC
 
 int HourLightOn = EEPROM.readInt(9);
+int MinuteLightOn = EEPROM.readInt(13);
+
 int HourLightOff = EEPROM.readInt(11);
+int MinuteLightOff = EEPROM.readInt(15);
 int AutomaticLightControl = true;
 //States 
 
@@ -366,10 +377,10 @@ void loop() {
   //get temperatures
   //
   //Serial.print(waterTemperature);
-  if(currentMillis - pumpPreviousMillis > pumpInterval){
+  if(currentMillis - pumpPreviousMillis > pumpInterval && !liquidFilled){
     updateWaterLevel();
-    TurnPumpOn();
-    pumpPreviousMillis = currentMillis
+      TurnPumpOn();
+      pumpPreviousMillis = currentMillis;
   }
   else if(currentMillis - pHPreviousMillis > pHInterval){
     updatepH();
@@ -408,6 +419,24 @@ void loop() {
 
   if(currentMillis - rtcPreviousMillis > rtcInterval){
     RTC.get(rtc,true);
+    LightControl();
+ 
+    /*
+    rtc[6]  // year
+    rtc[5] //month
+    rtc[4] //date
+
+    rtc[2] //hour
+
+    rtc[1] //min
+
+    rtc[0] //sec
+
+    rtc[3] //day of week
+   
+
+
+    */
     rtcPreviousMillis = currentMillis;
   }
 
@@ -589,6 +618,20 @@ void updateAll() {
 //Peristaltic Pump Control Functions
 
 //Light Control
+
+
+void LightControl(){
+  //TODO creqte a light control method that checks for itme 
+
+  if(AutomaticLightControl){
+    if((!lightStates[0] || !lightStates[1]) && ((rtc[2]==HourLightOn && rtc[1]>=MinuteLightOn) ||(rtc[2]>HourLightOn && rtc[2]<HourLightOff) )){
+      TurnAllLightsOn(100);
+    }
+    else if((lightStates[0] || lightStates[1]) && ((rtc[2]==HourLightOff && rtc[1]>=MinuteLightOff) || (rtc[2]<=HourLightOn&& rtc[1] < MinuteLightOn ))){
+      TurnAllLightsOff();
+    }
+  }
+}
 
 void TurnAllLightsOn(float brightness) {
   float analogBrightnessValue;
