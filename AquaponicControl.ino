@@ -366,7 +366,11 @@ void loop() {
   //get temperatures
   //
   //Serial.print(waterTemperature);
-  if(currentMillis - pHPreviousMillis > pHInterval){
+  if(currentMillis - pumpPreviousMillis > pumpInterval){
+    TurnPumpOn();
+    pumpPreviousMillis = currentMillis
+  }
+  else if(currentMillis - pHPreviousMillis > pHInterval){
     updatepH();
     if(pHReading > wantedpH + pHTolerance){
       pHDownAdjustment(pHDownAdjustmentcalculation());
