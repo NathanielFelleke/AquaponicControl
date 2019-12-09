@@ -204,14 +204,46 @@ void formatJSON(){
 
 void UpdateWantedpH(const char * payload, size_t length)
 {
-    Serial.print("ph:" + (String)payload);
+    Serial.print((String)"wph:" + (String)payload);
 }
+
+void UpdateWantedHumidity(const char * payload, size_t length){
+    Serial.print((String)"wh:" + (String)payload);
+}
+
+void UpdateWantedPumpInterval(const char * payload, size_t length){
+    Serial.print((String)"wpi:" + (String)payload);
+}
+
+void UpdateWaterDrainTime(const char * payload, size_t length){
+    Serial.print((String)"wdi:" +  (String)payload);
+}
+
+
 //TODO create many more handling methods
 
-void 
+void UpdatepHInterval(){
+    Serial.print((String)"phi:" + (String)payload);
+}
+
+void UpdateWaterTemperatureInterval(){
+    Serial.print((String)"wti:" + (String)payload);
+}
+
+void UpdateAirTemperatureInterval(){
+    Serial.print((String)"ati" + (String)payload);
+}
+
+void UpdateTDSInterval(){
+    Serial.print((String)"tdsi:" + (String)payload);
+}
+
+void UpdateTurbidityInterval(){
+    Serial.print((String)"ti:" + (String)payload);
+}
+
 
 void connectEvent(const char * payload, size_t length)
 {
-
     socket.emit("isControlSocket", "1");
 }

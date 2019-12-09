@@ -53,7 +53,28 @@
 
 
 //EEPROM Variables 
-
+const int heightOfSensorEEPROM = 3;
+const int waterDrainingIntervalEEPROM = 7;
+const int HourLightOnEEPROM = 9;
+const int HourLightOffEEPROM = 11;
+const int MinuteLightOnEEPROM = 13;
+const int MinuteLightOffEEPROM = 15;
+const int tdsSensorCalEEPROM = 16;
+const int pHIntervalEEPROM = 20;
+const int wTIntervalEEPROM = 22;
+const int wAIntervalEEPROM = 24;
+const int tdsIntervalEEPROM = 26;
+const int tIntervalEEPROM = 28;
+const int pumpIntervalEEPROM = 30; //TODO switch around with the wanted variables so must rewrite the EEPROM manually
+const int calStatusEEPROM = 35;
+const int CalLowEEPROM = 36;
+const int CalLowpHEEPROM = 38;
+const int CalMidEEPROM = 42;
+const int CalMidphEEPROM = 44;
+const int CalHighEEPROM = 48;
+const int CalHighpHEEPROM = 50;
+const int wantedHumidityEEPROM = 54;
+const int wantedpHEEPROM = 55;
 
 
 
@@ -151,16 +172,16 @@ int previousLiquidFilled= 0;
 
 float distance;
 float waterLevel;
-float heightOfSensor = EEPROM.readFloat(3); //TODO write the code for updating the height of the sensor
+float heightOfSensor = EEPROM.readFloat(heightOfSensorEEPROM); //TODO write the code for updating the height of the sensor
 UltraSonicDistanceSensor distanceSensor(distanceTriggerPin, distanceEchoPin);
 
 //CC
 
-int HourLightOn = EEPROM.readInt(9);
-int MinuteLightOn = EEPROM.readInt(13);
+int HourLightOn = EEPROM.readInt(HourLightOnEEPROM);
+int MinuteLightOn = EEPROM.readInt(MinuteLightOnEEPROM);
 
-int HourLightOff = EEPROM.readInt(11);
-int MinuteLightOff = EEPROM.readInt(15);
+int HourLightOff = EEPROM.readInt(HourLightOffEEPROM);
+int MinuteLightOff = EEPROM.readInt(MinuteLightOffEEPROM);
 int AutomaticLightControl = true;
 //States 
 
@@ -169,7 +190,7 @@ float lightStates[] = {
   100
 }; //Red State then Blue State
 
-float 
+
 
 
 int pumpState = 0;
@@ -178,14 +199,16 @@ int mixerState = 0;
 
 // intervals
 
-unsigned long pHInterval = (long)EEPROM.readInt(20) * (long)1000;
-unsigned long wTInterval = (long)EEPROM.readInt(22) * (long)1000;
-unsigned long wAInterval = (long)EEPROM.readInt(24) * (long)1000;
-unsigned long tdsInterval = (long)EEPROM.readInt(26) * (long)1000;
-unsigned long tInterval = (long)EEPROM.readInt(28) * (long)1000;
+unsigned long pHInterval = (long)EEPROM.readInt(pHIntervalEEPROM) * (long)1000;
+unsigned long wTInterval = (long)EEPROM.readInt(wTIntervalEEPROM) * (long)1000;
+unsigned long wAInterval = (long)EEPROM.readInt(wAIntervalEEPROM) * (long)1000;
+unsigned long tdsInterval = (long)EEPROM.readInt(tdsIntervalEEPROM) * (long)1000;
+unsigned long tInterval = (long)EEPROM.readInt(tIntervalEEPROM) * (long)1000;
+unsigned long pumpInterval = (long)EEPROM.readInt(pumpIntervalEEPROM) * (long)1000;
 unsigned long rtcInterval = (long)60000;
 unsigned long distanceSensorInterval = (long)60000;
-long waterDrainingInterval = (long)EEPROM.readInt(7) * (long)1000;
+unsigned long waterDrainingInterval = (long)EEPROM.readInt(waterDrainingIntervalEEPROM) * (long)1000;
+
 
 unsigned long pHPreviousMillis = 0;
 unsigned long wTPreviousMillis = 0;
@@ -194,6 +217,7 @@ unsigned long tdsPreviousMillis = 0;
 unsigned long tPreviousMillis = 0;
 unsigned long rtcPreviousMillis = 0;
 unsigned long distanceSensorPreviousMillis  = 0;
+unsinged long pumpPreviousMillis = 0;
 unsigned long temporaryDistanceSensorPreviousMillis;
 
 //Pumps
@@ -216,12 +240,12 @@ void setup() {
 
   if (calStatus > 7) {
     calStatus = 0;
-    EEPROM.write(3, calStatus);
+    EEPROM.write(calStatusEEPROM, calStatus);
   }
   Serial.println(calStatus);
   if ((calStatus & 1) == 1) {
-    CalLow = EEPROM.readInt(36);
-    CalLowpH = EEPROM.readFloat(38);
+    CalLow = EEPROM.readInt(CalLowEEPROM);
+    CalLowpH = EEPROM.readFloat(CalLowpHEEPROM);
     
   }
   Serial.print("Low pH: ");
@@ -230,8 +254,8 @@ void setup() {
   Serial.println(CalLowpH);
 
   if ((calStatus & 2) == 2) {
-    CalMid = EEPROM.readInt(42);
-    CalLowpH = EEPROM.readFloat(44);
+    CalMid = EEPROM.readInt(CalMidEEPROM);
+    CalMidpH = EEPROM.readFloat(CalMidphEEPROM);
     
   }
   Serial.print("Mid pH: ");
@@ -239,8 +263,8 @@ void setup() {
   Serial.print("   ");
   Serial.println(CalMidpH);
   if ((calStatus & 4) == 4) {
-    CalHigh = EEPROM.readInt(48);
-    CalHighpH = EEPROM.readFloat(50);
+    CalHigh = EEPROM.readInt(CalHighEEPROM);
+    CalHighpH = EEPROM.readFloat(CalHighpHEEPROM);
     
   }
   Serial.print("High pH: ");
@@ -249,12 +273,12 @@ void setup() {
   Serial.println(CalHighpH);
 
   
-  wantedHumidity = (float)EEPROM.read(30);
+  wantedHumidity = (float)EEPROM.read(wantedHumidityEEPROM);
 
-  wantedpH = EEPROM.readFloat(31);
+  wantedpH = EEPROM.readFloat(wantedpHEEPROM);
 
 
-  tdsSensor.setKvalueAddress(16); //sets the EEPROM address for the tds sensor k value
+  tdsSensor.setKvalueAddress(tdsSensorCalEEPROM); //sets the EEPROM address for the tds sensor k value
   tdsSensor.setPin(tdsSensorPin);
   tdsSensor.setAref(5.0);
   tdsSensor.setAdcRange(1024);
@@ -305,28 +329,28 @@ void loop() {
       CalLowpH = ServerSerialCommand.toFloat();
       CalLow = pHGetMiddleAnalog();
       calStatus = calStatus | 1;
-      EEPROM.write(35, calStatus);
-      EEPROM.writeInt(36, CalLow);
+      EEPROM.write(calStatusEEPROM, calStatus);
+      EEPROM.writeInt(CalLowEEPROM, CalLow);
       
-      EEPROM.writeFloat(38, CalLowpH);
+      EEPROM.writeFloat(CalLowpHEEPROM, CalLowpH);
       
     } else if (ServerSerialCommand.startsWith("CM")) {
       ServerSerialCommand = ServerSerialCommand.substring(2);
       CalMidpH = ServerSerialCommand.toFloat();
       CalMid = pHGetMiddleAnalog();
       calStatus = calStatus | 2;
-      EEPROM.write(35, calStatus);
-      EEPROM.writeInt(42, CalMid);
-      EEPROM.writeFloat(44, CalLowpH);
+      EEPROM.write(calStatusEEPROM, calStatus);
+      EEPROM.writeInt(CalMidEEPROM, CalMid);
+      EEPROM.writeFloat(CalMidphEEPROM, CalMidpH);
       
     } else if (ServerSerialCommand.startsWith("CU")) {
       ServerSerialCommand = ServerSerialCommand.substring(2);
       CalHighpH = ServerSerialCommand.toFloat();
       CalHigh = pHGetMiddleAnalog();
       calStatus = calStatus | 4;
-      EEPROM.write(35, calStatus);
-      EEPROM.writeInt(48, CalHigh);
-      EEPROM.writeFloat(50, CalHighpH);
+      EEPROM.write(calStatusEEPROM, calStatus);
+      EEPROM.writeInt(CalHighEEPROM, CalHigh);
+      EEPROM.writeFloat(CalHighpHEEPROM, CalHighpH);
     } else if (ServerSerialCommand.startsWith("CTDS")) {
       ServerSerialCommand = ServerSerialCommand.substring(4);
       tdsCalibrationValue = ServerSerialCommand.toFloat();
@@ -344,27 +368,28 @@ void loop() {
       CalLowpH = MasterSerialCommand.toFloat();
       CalLow = pHGetMiddleAnalog();
       calStatus = calStatus | 1;
-      EEPROM.write(35, calStatus);
-      EEPROM.writeInt(36, CalLow);
-      EEPROM.writeFloat(38, CalLowpH);
+      EEPROM.write(calStatusEEPROM, calStatus);
+      EEPROM.writeInt(CalLowEEPROM, CalLow);
+      
+      EEPROM.writeFloat(CalLowpHEEPROM, CalLowpH);
       
     } else if (MasterSerialCommand.startsWith("CM")) {
       MasterSerialCommand = MasterSerialCommand.substring(2);
       CalMidpH = MasterSerialCommand.toFloat();
       CalMid = pHGetMiddleAnalog();
       calStatus = calStatus | 2;
-      EEPROM.write(35, calStatus);
-      EEPROM.writeInt(42, CalMid);
-      EEPROM.writeFloat(44, CalLowpH);
+       EEPROM.write(calStatusEEPROM, calStatus);
+      EEPROM.writeInt(CalMidEEPROM, CalMid);
+      EEPROM.writeFloat(CalMidphEEPROM, CalMidpH);
       
     } else if (MasterSerialCommand.startsWith("CU")) {
       MasterSerialCommand = MasterSerialCommand.substring(2);
       CalHighpH = MasterSerialCommand.toFloat();
       CalHigh = pHGetMiddleAnalog();
       calStatus = calStatus | 4;
-      EEPROM.write(35, calStatus);
-      EEPROM.writeInt(48, CalHigh);
-      EEPROM.writeFloat(50, CalHighpH);
+      EEPROM.write(calStatusEEPROM, calStatus);
+      EEPROM.writeInt(CalHighEEPROM, CalHigh);
+      EEPROM.writeFloat(CalHighpHEEPROM, CalHighpH);
     } else if (MasterSerialCommand.startsWith("CTDS")) {
       MasterSerialCommand = MasterSerialCommand.substring(4);
       tdsCalibrationValue = MasterSerialCommand.toFloat();
@@ -379,8 +404,8 @@ void loop() {
   //Serial.print(waterTemperature);
   if(currentMillis - pumpPreviousMillis > pumpInterval && !liquidFilled){
     updateWaterLevel();
-      TurnPumpOn();
-      pumpPreviousMillis = currentMillis;
+    TurnPumpOn();
+    pumpPreviousMillis = currentMillis;
   }
   else if(currentMillis - pHPreviousMillis > pHInterval){
     updatepH();
