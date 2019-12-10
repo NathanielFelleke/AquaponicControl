@@ -217,7 +217,7 @@ unsigned long tdsPreviousMillis = 0;
 unsigned long tPreviousMillis = 0;
 unsigned long rtcPreviousMillis = 0;
 unsigned long distanceSensorPreviousMillis  = 0;
-unsinged long pumpPreviousMillis = 0;
+unsigned long pumpPreviousMillis = 0;
 unsigned long temporaryDistanceSensorPreviousMillis;
 
 //Pumps
@@ -324,7 +324,47 @@ void loop() {
       
       initServer();
     }
-    if (ServerSerialCommand.startsWith("CL")) {
+    else if(ServerSerialCommand.startsWith("wph:")){
+      ServerSerialCommand = ServerSerialCommand.substring(4);
+      wantedpH = ServerSerialCommand.toFloat();
+      EEPROM.writeFloat(wantedpHEEPROM,wantedpH);
+    }
+    else if(ServerSerialCommand.startsWith("wh:")){
+      ServerSerialCommand = ServerSerialCommand.substring(3);
+      wantedHumidity = ServerSerialCommand.toFloat();
+      EEPROM.write(wantedHumidityEEPROM, wantedHumidity); 
+    }
+    else if(ServerSerialCommand.startsWith("wpi:")){
+      ServerSerialCommand = ServerSerialCommand.substring(4);
+      pumpInterval = (long)ServerSerialCommand.toInt() * (long)1000;
+      EEPROM.writeInt(pumpIntervalEEPROM, ServerSerialCommand.toInt());
+    }
+    else if(ServerSerialCommand.startsWith("wdi:")){
+      ServerSerialCommand = ServerSerialCommand.substring(4);
+      waterDrainingInterval = (long)ServerSerialCommand.toInt() * (long)1000;
+      EEPROM.writeInt(waterDrainingIntervalEEPROM, ServerSerialCommand.toInt());
+    }
+    else if(ServerSerialCommand.startsWith("phi:")){
+      ServerSerialCommand = ServerSerialCommand.substring(4);
+      pHInterval = (long)ServerSerialCommand.toInt() * (long)1000;
+      EEPROM.writeInt(pHIntervalEEPROM, ServerSerialCommand.toInt());
+    }
+    else if(ServerSerialCommand.startsWith("wti:")){
+      ServerSerialCommand = ServerSerialCommand.substring(4);
+      wTInterval = (long)ServerSerialCommand.toInt() * (long)1000;
+      EEPROM.writeInt(wTIntervalEEPROM, ServerSerialCommand.toInt());
+    }
+    else if(ServerSerialCommand.startsWith("tdsi:")){
+      ServerSerialCommand = ServerSerialCommand.substring(5);
+      tdsInterval = (long)ServerSerialCommand.toInt() * (long)1000;
+      EEPROM.writeInt(tdsIntervalEEPROM, ServerSerialCommand.toInt());
+    }
+    else if(ServerSerialCommand.starts("ti:")){
+      ServerSerialCommand = ServerSerialCommand.substring(3);
+      tInterval = (long)ServerSerialCommand.toInt() * (long)1000;
+      EEPROM.writeInt(tIntervalEEPROM, ServerSerialCommand.toInt());
+    }
+    else if (ServerSerialCommand.startsWith("CL")) {
       ServerSerialCommand = ServerSerialCommand.substring(2);
       CalLowpH = ServerSerialCommand.toFloat();
       CalLow = pHGetMiddleAnalog();
