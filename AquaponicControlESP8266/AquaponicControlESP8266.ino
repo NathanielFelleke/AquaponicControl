@@ -68,9 +68,26 @@ void setup() {
       Serial.println("nc");
         delay(2000);
     }
-    socket.on("wantedpH", UpdateWantedpH);
+    
+
     socket.begin(server, port);
     socket.on("connect", connectEvent);
+    socket.on("WantedpH", UpdateWantedpH);
+    socket.on("WantedHumidity", UpdateWantedHumidity);
+    socket.on("WantedPumpInterval", UUpdateWantedPumpInterval);
+    socket.on("WaterDrainTime", UpdateWaterDrainTime);
+    socket.on("DistanceSensorHeight", UpdateDistanceSensorHeight);
+    socket.on("WantedpHInterval", UpdatepHInterval);
+    socket.on("WantedWaterTemperatureInterval", UpdateWaterTemperatureInterval);
+    socket.on("WantedAirTemperatureInterval", UpdateAirTemperatureInterval);
+    socket.on("WantedTDSInterval", UpdateTDSInterval);
+    socket.on("WantedTurbidityInterval", UpdateTurbidityInterval);
+    socket.on("CalibrateLowerpH", UpdateLowerpHCalibrate);
+    socket.on("CalibrateMiddlepH", UpdateMiddlepHCalibrate);
+    socket.on("CalibrateUpperpH", UpdateUpperpHCalibrate);
+    socket.on("CalibrateTDS", UpdateTDSCalibrate);
+
+
     //IPAdress localIP = WiFi.localIP();
     Serial.print("c");
     
@@ -138,27 +155,46 @@ void UpdateWaterDrainTime(const char * payload, size_t length){
     Serial.print((String)"wdi:" +  (String)payload);
 }
 
+void UpdateDistanceSensorHeight(const char * payload, size_t length){
+    Serial.print((String)"dsh:" + (String)payload);
 
+}
 //TODO create many more handling methods
 
-void UpdatepHInterval(){
+void UpdatepHInterval(const char * payload, size_t length){
     Serial.print((String)"phi:" + (String)payload);
 }
 
-void UpdateWaterTemperatureInterval(){
+void UpdateWaterTemperatureInterval(const char * payload, size_t length){
     Serial.print((String)"wti:" + (String)payload);
 }
 
-void UpdateAirTemperatureInterval(){
+void UpdateAirTemperatureInterval(const char * payload, size_t length){
     Serial.print((String)"ati" + (String)payload);
 }
 
-void UpdateTDSInterval(){
+void UpdateTDSInterval(const char * payload, size_t length){
     Serial.print((String)"tdsi:" + (String)payload);
 }
 
-void UpdateTurbidityInterval(){
+void UpdateTurbidityInterval(const char * payload, size_t length){
     Serial.print((String)"ti:" + (String)payload);
+}
+
+void UpdateLowerpHCalibrate(const char * payload, size_t length){
+    Serial.print((String)"CL" + (String)payload);
+}
+
+void UpdateMiddlepHCalibrate(const char * payload, size_t length){
+    Serial.print((String)"CM" + (String)payload);
+}
+
+void UpdateUpperpHCalibrate(const char * payload, size_t length){
+    Serial.print((String)"CU" + (String)payload);
+}
+
+void UpdateTDSCalibrate(const char * payload, size_t length){
+    Serial.print((String)"CTDS" +(String)payload);
 }
 
 

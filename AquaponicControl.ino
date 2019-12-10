@@ -359,10 +359,15 @@ void loop() {
       tdsInterval = (long)ServerSerialCommand.toInt() * (long)1000;
       EEPROM.writeInt(tdsIntervalEEPROM, ServerSerialCommand.toInt());
     }
-    else if(ServerSerialCommand.starts("ti:")){
+    else if(ServerSerialCommand.startsWith("ti:")){
       ServerSerialCommand = ServerSerialCommand.substring(3);
       tInterval = (long)ServerSerialCommand.toInt() * (long)1000;
       EEPROM.writeInt(tIntervalEEPROM, ServerSerialCommand.toInt());
+    }
+    else if(ServerSerialCommand.startsWith("dsh:")){
+      ServerSerialCommand = ServerSerialCommand.substring(4);
+      heightOfSensor = ServerSerialCommand.toFloat();
+      EEPROM.writeFloat(heightOfSensorEEPROM,heightOfSensor);
     }
     else if (ServerSerialCommand.startsWith("CL")) {
       ServerSerialCommand = ServerSerialCommand.substring(2);
