@@ -51,7 +51,7 @@
 
 #define humidityControlPin 29
 
-
+//TODO format all variables the same way
 //EEPROM Variables 
 const int heightOfSensorEEPROM = 3;
 const int waterDrainingIntervalEEPROM = 7;
@@ -75,9 +75,10 @@ const int CalHighEEPROM = 48;
 const int CalHighpHEEPROM = 50;
 const int wantedHumidityEEPROM = 54;
 const int wantedpHEEPROM = 55;
-const int wantedWaterLevelEEPROM = 59;
-const int WaterContainerAreaEEPROM = 63;
-
+const pHToleranceEEPROM = 59;
+const int WantedWaterLevelEEPROM = 63;
+const int WaterContainerAreaEEPROM = 67;
+const WantedAutomaticBrightnessEEPROM = 71;
 
 //unit constants
 const float cubicFeetToLitersConstant = 28.3168466;
@@ -93,7 +94,7 @@ String FeederSerialCommand; //Serial input from arduino controlling the automati
 
 //demensions
 float WaterContainerArea = EEPROM.readFloat(WaterContainerAreaEEPROM);
-float wantedWaterLevel = EEPROM.readFloat(wantedWaterLevelEEPROM);
+float wantedWaterLevel = EEPROM.readFloat(WantedWaterLevelEEPROM);
 
 //pH Variables
 float pHReading;
@@ -103,7 +104,7 @@ float pHReading3;
 float previouspHReading;
 int AV;
 float wantedpH;
-float pHTolerance = 0.4;
+float pHTolerance = EEPROM.readFloat();
 
 unsigned int CalLow = 341;
 float CalLowpH = 4.01;
@@ -172,14 +173,14 @@ int previousLiquidFilled= 0;
 float distance;
 float waterLevel;
 float heightOfSensor = EEPROM.readFloat(heightOfSensorEEPROM); //TODO write the code for updating the height of the sensor
-UltraSonicDistanceSensor distanceSensor(distanceTriggerPin, distanceEchoPin);
+UltraSonicDistanceSensor distanceSensor(distanceTriggerPin, distanceEchoPin); //TODO move stuff to setup()
 
 //CC
 
 int HourLightOn = EEPROM.readInt(HourLightOnEEPROM);
-int MinuteLightOn = EEPROM.readInt(MinuteLightOnEEPROM);
+int MinuteLightOn = EEPROM.readInt(MinuteLightOnEEPROM); //TODO move stuff to setuop()
 
-int HourLightOff = EEPROM.readInt(HourLightOffEEPROM);
+int HourLightOff = EEPROM.readInt(HourLightOffEEPROM); //TODO move stuff to setup()
 int MinuteLightOff = EEPROM.readInt(MinuteLightOffEEPROM);
 int AutomaticLightControl = true;
 //States 
@@ -187,7 +188,10 @@ int AutomaticLightControl = true;
 float lightStates[] = {
   100,
   100
-}; //Red State then Blue State
+};
+
+int WantedAutomaticBrightness = EEPROM.read(WantedAutomaticBrightnessEEPROM);
+ //Red State then Blue State
 
 
 
@@ -200,7 +204,7 @@ int mixerState = 0;
 
 unsigned long pHInterval = (long)EEPROM.readInt(pHIntervalEEPROM) * (long)1000;
 unsigned long wTInterval = (long)EEPROM.readInt(wTIntervalEEPROM) * (long)1000;
-unsigned long wAInterval = (long)EEPROM.readInt(wAIntervalEEPROM) * (long)1000;
+unsigned long wAInterval = (long)EEPROM.readInt(wAIntervalEEPROM) * (long)1000; //TODO move stuff to setup
 unsigned long tdsInterval = (long)EEPROM.readInt(tdsIntervalEEPROM) * (long)1000;
 unsigned long tInterval = (long)EEPROM.readInt(tIntervalEEPROM) * (long)1000;
 unsigned long pumpInterval = (long)EEPROM.readInt(pumpIntervalEEPROM) * (long)1000;
@@ -211,7 +215,7 @@ unsigned long waterDrainingInterval = (long)EEPROM.readInt(waterDrainingInterval
 
 unsigned long pHPreviousMillis = 0;
 unsigned long wTPreviousMillis = 0;
-unsigned long wAPreviousMillis = 0;
+unsigned long wAPreviousMillis = 0;  
 unsigned long tdsPreviousMillis = 0;
 unsigned long tPreviousMillis = 0;
 unsigned long rtcPreviousMillis = 0;
@@ -239,7 +243,7 @@ void setup() {
 
   if (calStatus > 7) {
     calStatus = 0;
-    EEPROM.write(calStatusEEPROM, calStatus);
+    EEPROM.update(calStatusEEPROM, calStatus);
   }
   Serial.println(calStatus);
   if ((calStatus & 1) == 1) {
@@ -326,37 +330,37 @@ void loop() {
     else if(ServerSerialCommand.startsWith("wph:")){
       ServerSerialCommand = ServerSerialCommand.substring(4);
       wantedpH = ServerSerialCommand.toFloat();
-      EEPROM.writeFloat(wantedpHEEPROM,wantedpH);
+      EEPROM.updateFloat(wantedpHEEPROM,wantedpH);
     }
     else if(ServerSerialCommand.startsWith("wh:")){
       ServerSerialCommand = ServerSerialCommand.substring(3);
       wantedHumidity = ServerSerialCommand.toFloat();
-      EEPROM.write(wantedHumidityEEPROM, wantedHumidity); 
+      EEPROM.update(wantedHumidityEEPROM, wantedHumidity); 
     }
     else if(ServerSerialCommand.startsWith("wpi:")){
       ServerSerialCommand = ServerSerialCommand.substring(4);
       pumpInterval = (long)ServerSerialCommand.toInt() * (long)1000;
-      EEPROM.writeInt(pumpIntervalEEPROM, ServerSerialCommand.toInt());
+      EEPROM.updateInt(pumpIntervalEEPROM, ServerSerialCommand.toInt());
     }
     else if(ServerSerialCommand.startsWith("wdi:")){
       ServerSerialCommand = ServerSerialCommand.substring(4);
       waterDrainingInterval = (long)ServerSerialCommand.toInt() * (long)1000;
-      EEPROM.writeInt(waterDrainingIntervalEEPROM, ServerSerialCommand.toInt());
+      EEPROM.updateInt(waterDrainingIntervalEEPROM, ServerSerialCommand.toInt());
     }
     else if(ServerSerialCommand.startsWith("phi:")){
       ServerSerialCommand = ServerSerialCommand.substring(4);
       pHInterval = (long)ServerSerialCommand.toInt() * (long)1000;
-      EEPROM.writeInt(pHIntervalEEPROM, ServerSerialCommand.toInt());
+      EEPROM.updateInt(pHIntervalEEPROM, ServerSerialCommand.toInt());
     }
     else if(ServerSerialCommand.startsWith("wti:")){
       ServerSerialCommand = ServerSerialCommand.substring(4);
       wTInterval = (long)ServerSerialCommand.toInt() * (long)1000;
-      EEPROM.writeInt(wTIntervalEEPROM, ServerSerialCommand.toInt());
+      EEPROM.updateInt(wTIntervalEEPROM, ServerSerialCommand.toInt());
     }
     else if(ServerSerialCommand.startsWith("tdsi:")){
       ServerSerialCommand = ServerSerialCommand.substring(5);
       tdsInterval = (long)ServerSerialCommand.toInt() * (long)1000;
-      EEPROM.writeInt(tdsIntervalEEPROM, ServerSerialCommand.toInt());
+      EEPROM.updateInt(tdsIntervalEEPROM, ServerSerialCommand.toInt());
     }
     else if(ServerSerialCommand.startsWith("ti:")){
       ServerSerialCommand = ServerSerialCommand.substring(3);
@@ -366,35 +370,35 @@ void loop() {
     else if(ServerSerialCommand.startsWith("dsh:")){
       ServerSerialCommand = ServerSerialCommand.substring(4);
       heightOfSensor = ServerSerialCommand.toFloat();
-      EEPROM.writeFloat(heightOfSensorEEPROM,heightOfSensor);
+      EEPROM.updateFlaot(heightOfSensorEEPROM,heightOfSensor);
     }
     else if (ServerSerialCommand.startsWith("CL")) {
       ServerSerialCommand = ServerSerialCommand.substring(2);
       CalLowpH = ServerSerialCommand.toFloat();
       CalLow = pHGetMiddleAnalog();
       calStatus = calStatus | 1;
-      EEPROM.write(calStatusEEPROM, calStatus);
-      EEPROM.writeInt(CalLowEEPROM, CalLow);
+      EEPROM.update(calStatusEEPROM, calStatus);
+      EEPROM.updateInt(CalLowEEPROM, CalLow);
       
-      EEPROM.writeFloat(CalLowpHEEPROM, CalLowpH);
+      EEPROM.updateFloat(CalLowpHEEPROM, CalLowpH);
       
     } else if (ServerSerialCommand.startsWith("CM")) {
       ServerSerialCommand = ServerSerialCommand.substring(2);
       CalMidpH = ServerSerialCommand.toFloat();
       CalMid = pHGetMiddleAnalog();
       calStatus = calStatus | 2;
-      EEPROM.write(calStatusEEPROM, calStatus);
-      EEPROM.writeInt(CalMidEEPROM, CalMid);
-      EEPROM.writeFloat(CalMidphEEPROM, CalMidpH);
+      EEPROM.update(calStatusEEPROM, calStatus);
+      EEPROM.updateInt(CalMidEEPROM, CalMid);
+      EEPROM.updateFloat(CalMidphEEPROM, CalMidpH);
       
     } else if (ServerSerialCommand.startsWith("CU")) {
       ServerSerialCommand = ServerSerialCommand.substring(2);
       CalHighpH = ServerSerialCommand.toFloat();
       CalHigh = pHGetMiddleAnalog();
       calStatus = calStatus | 4;
-      EEPROM.write(calStatusEEPROM, calStatus);
-      EEPROM.writeInt(CalHighEEPROM, CalHigh);
-      EEPROM.writeFloat(CalHighpHEEPROM, CalHighpH);
+      EEPROM.update(calStatusEEPROM, calStatus);
+      EEPROM.updateInt(CalHighEEPROM, CalHigh);
+      EEPROM.updatePloat(CalHighpHEEPROM, CalHighpH);
     } else if (ServerSerialCommand.startsWith("CTDS")) {
       ServerSerialCommand = ServerSerialCommand.substring(4);
       tdsCalibrationValue = ServerSerialCommand.toFloat();
@@ -412,28 +416,28 @@ void loop() {
       CalLowpH = MasterSerialCommand.toFloat();
       CalLow = pHGetMiddleAnalog();
       calStatus = calStatus | 1;
-      EEPROM.write(calStatusEEPROM, calStatus);
-      EEPROM.writeInt(CalLowEEPROM, CalLow);
+      EEPROM.update(calStatusEEPROM, calStatus);
+      EEPROM.updateInt(CalLowEEPROM, CalLow);
       
-      EEPROM.writeFloat(CalLowpHEEPROM, CalLowpH);
+      EEPROM.updateFloat(CalLowpHEEPROM, CalLowpH);
       
     } else if (MasterSerialCommand.startsWith("CM")) {
       MasterSerialCommand = MasterSerialCommand.substring(2);
       CalMidpH = MasterSerialCommand.toFloat();
       CalMid = pHGetMiddleAnalog();
       calStatus = calStatus | 2;
-       EEPROM.write(calStatusEEPROM, calStatus);
-      EEPROM.writeInt(CalMidEEPROM, CalMid);
-      EEPROM.writeFloat(CalMidphEEPROM, CalMidpH);
+       EEPROM.update(calStatusEEPROM, calStatus);
+      EEPROM.updateInt(CalMidEEPROM, CalMid);
+      EEPROM.updateFloat(CalMidphEEPROM, CalMidpH);
       
     } else if (MasterSerialCommand.startsWith("CU")) {
       MasterSerialCommand = MasterSerialCommand.substring(2);
       CalHighpH = MasterSerialCommand.toFloat();
       CalHigh = pHGetMiddleAnalog();
       calStatus = calStatus | 4;
-      EEPROM.write(calStatusEEPROM, calStatus);
-      EEPROM.writeInt(CalHighEEPROM, CalHigh);
-      EEPROM.writeFloat(CalHighpHEEPROM, CalHighpH);
+      EEPROM.update(calStatusEEPROM, calStatus);
+      EEPROM.updateInt(CalHighEEPROM, CalHigh);
+      EEPROM.updateFloat(CalHighpHEEPROM, CalHighpH);
     } else if (MasterSerialCommand.startsWith("CTDS")) {
       MasterSerialCommand = MasterSerialCommand.substring(4);
       tdsCalibrationValue = MasterSerialCommand.toFloat();
@@ -619,33 +623,30 @@ void updateAirTemperature() {
   outsideAirTemperature = outsideTemperatureSensor.getTemperatureC();
 
   insideHumidity = insideTemperatureSensor.getHumidity();
-  outsideHumidity = outsideTemperatureSensor.getHumidity();
+  outsideHumidity = outsideTemperatureSensor.getHumidity(); // TODO Check if can send all values in same method. also check if delays are effective
   delay(50);
   Server.print((String)"{\"iat\":" + (String)"\"" + (String)insideAirTemperature + (String)"\"}");
   delay(50);
-   // TODO check to see if works
   Server.print((String)"{\"ih\":" + (String)"\"" + (String)insideHumidity + (String)"\"}");
   delay(50);
   Server.print((String)"{\"oat\":" + (String)"\"" + (String)outsideAirTemperature + (String)"\"}");
   delay(50);
   Server.print((String)"{\"oh\":" + (String)"\"" + (String)outsideHumidity + (String)"\"}");
-  //TODO write code that updates esp8266 through serial
+  
 }
 
 void updateWaterTemperature() {
   waterTemperature = waterTemperatureSensor.readTemperature();
   delay(50);
   Server.print((String)"{\"wt\":" + (String)waterTemperature + (String)"}");
-  // TODO check to see if it works
-  //TODO write code that updates esp8266 through serial
+  
 }
 
 void updateTurbidity() {
-  turbidityVoltage = turbidityGetMiddleAnalog() * (5.0 / 1024.0); //TODO check to see if it works
+  turbidityVoltage = turbidityGetMiddleAnalog() * (5.0 / 1024.0); //TODO check if turbidity math is correct
   delay(50);
   Server.print((String)"{\"tv\":" + (String)turbidityVoltage + (String)"}");
-  // TODO check if it works
-  //TODO write code that updates esp8266 through serial
+
 
 }
 
@@ -657,7 +658,7 @@ void updateLiquidFilled() {
     Server.print((String)"{\"lf\":" + (String)liquidFilled + (String)"}");
   }
   
-  //TODO write code that updates esp8266 through serial
+
 }
 
 void updateTDS() {
@@ -667,7 +668,7 @@ void updateTDS() {
   ecValue = tdsSensor.getEcValue();
   delay(50);
   Server.print((String)"{\"tds\":" + (String)tdsValue + (String)"}");
-  //TODO write code that updates esp8266 through serial
+
 }
 
 void updateWaterLevel(){
@@ -690,11 +691,10 @@ void updateAll() {
 
 
 void LightControl(){
-  //TODO creqte a light control method that checks for itme 
 
   if(AutomaticLightControl){
     if((!lightStates[0] || !lightStates[1]) && ((rtc[2]==HourLightOn && rtc[1]>=MinuteLightOn) ||(rtc[2]>HourLightOn && rtc[2]<HourLightOff) )){
-      TurnAllLightsOn(100);
+      TurnAllLightsOn(WantedAutomaticBrighteness);
     }
     else if((lightStates[0] || lightStates[1]) && ((rtc[2]==HourLightOff && rtc[1]>=MinuteLightOff) || (rtc[2]<=HourLightOn&& rtc[1] < MinuteLightOn ))){
       TurnAllLightsOff();
@@ -725,7 +725,7 @@ void TurnAllLightsOn(float brightness) {
   lightStates[1] = filteredBrightness;
   delay(50);
   Server.print((String)"{\"lsr\":" + (String)lightStates[0] + ", \"lsb\":" + (String)lightStates[1] + (String)"}");
-  //TODO write code that updates esp8266 through serial
+  
 }
 
 void TurnAllLightsOff() {
@@ -735,7 +735,7 @@ void TurnAllLightsOff() {
   lightStates[1] = 0;
   delay(50);
   Server.print((String)"{\"lsr\":" + (String)lightStates[0] + ", \"lsb\":" + (String)lightStates[1] + (String)"}");
-  //TODO write code that updates esp8266 through serial
+
 }
 
 
@@ -758,7 +758,7 @@ void TurnRedLightsOn(float brightness) {
   lightStates[0] = filteredBrightness;
   delay(50);
   Server.print((String)"{\"lsr\":"+ (String)lightStates[0] + (String)"}");
-  //TODO write code that updates esp8266 through serial
+
 }
 
 void TurnRedLightsOff() {
@@ -766,7 +766,7 @@ void TurnRedLightsOff() {
   lightStates[0] = 0;
   delay(50);
   Server.print((String)"{\"lsr\":"+ (String)lightStates[0] + (String)"}");
-  //TODO write code that updates esp8266 through serial
+ 
 }
 
 void TurnBlueLightsOn(float brightness) {
@@ -788,8 +788,7 @@ void TurnBlueLightsOn(float brightness) {
   lightStates[0] = filteredBrightness;
   delay(50);
   Server.print((String)"{\"lsb\":" + (String)lightStates[1] + (String)"}");
- 
-  //TODO write code that updates esp8266 through serial
+
 }
 
 void TurnBlueLightsOff() {
@@ -797,7 +796,7 @@ void TurnBlueLightsOff() {
   lightStates[1] = 0;
   delay(50);
   Server.print((String)"{\"lsb\":" + (String)lightStates[1] + (String)"}");
-  //TODO write code that updates esp8266 through serial
+
 }
 
 
@@ -845,7 +844,7 @@ void setTime(int sec, int min, int hour, int dow, int date, int month, int year)
 
 void initServer() {
   updateAll();
-  //TODO update eeprom stuff
+  //TODO update eeprom stuff to the server
 }
 
 
