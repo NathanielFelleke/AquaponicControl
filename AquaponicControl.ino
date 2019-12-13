@@ -75,7 +75,8 @@ const int CalHighEEPROM = 48;
 const int CalHighpHEEPROM = 50;
 const int wantedHumidityEEPROM = 54;
 const int wantedpHEEPROM = 55;
-
+const int wantedWaterLevelEEPROM = 59;
+const int WaterContainerAreaEEPROM = 63;
 
 
 //unit constants
@@ -91,10 +92,8 @@ String WaterTestSerialCommand; //serial input from an arduino controlling the wa
 String FeederSerialCommand; //Serial input from arduino controlling the automatic feeders for the fish (unused for now)
 
 //demensions
-float containerWidth = 7;
-float containerLength = 7;
-float containerHeight = 4;
-float wantedWaterHeight = 2;
+float WaterContainerArea = EEPROM.readFloat(WaterContainerAreaEEPROM);
+float wantedWaterLevel = EEPROM.readFloat(wantedWaterLevelEEPROM);
 
 //pH Variables
 float pHReading;
@@ -845,7 +844,8 @@ void setTime(int sec, int min, int hour, int dow, int date, int month, int year)
 }
 
 void initServer() {
-  Server.write("");
+  updateAll();
+  //TODO update eeprom stuff
 }
 
 
