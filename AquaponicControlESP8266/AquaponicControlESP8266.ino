@@ -120,7 +120,7 @@ void loop() {
       
       char SerialCommandChar[SerialCommand.length()];
       SerialCommand.toCharArray(SerialCommandChar,SerialCommand.length()+1); 
-        if(SerialCommand.startsWith("{") && SerialCommand.endsWith("}")){
+        if(SerialCommand.startsWith("{")){
           socket.emit("controlUpdate",SerialCommandChar);
         }
         else{  
