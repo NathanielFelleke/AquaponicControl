@@ -94,7 +94,7 @@ String FeederSerialCommand; //Serial input from arduino controlling the automati
 
 //demensions
 float WaterContainerArea = EEPROM.readFloat(WaterContainerAreaEEPROM);
-float wantedWaterLevel = EEPROM.readFloat(WantedWaterLevelEEPROM);
+float WantedWaterLevel = EEPROM.readFloat(WantedWaterLevelEEPROM);
 
 //pH Variables
 float pHReading;
@@ -372,6 +372,21 @@ void loop() {
       heightOfSensor = ServerSerialCommand.toFloat();
       EEPROM.updateFlaot(heightOfSensorEEPROM,heightOfSensor);
     }
+    else if(ServerSerialCommand.startsWith("wab:")){
+      ServerSerialCommand = ServerSerialCommand.substring(4);
+      WantedAutomaticBrightness = ServerSerialCommand.toInt();
+      EEPROM.update(WantedAutomaticBrightenessEEPROM, WantedAutomaticBrightness)
+    }
+    else if(ServerSerialCommand.startsWith("wwl:")){
+      ServerSerialCommand = ServerSerialCommand.substring(4);
+      WantedWaterLevel = ServerSerialCommand.toFloat();
+      EEPROM.updateFloat(WantedWaterLevelEEPROM, WantedWaterLevel);
+    }
+    else if(ServerSerialCommand.startsWith("wca:")){
+      ServerSerialCommand = ServerSerialCommand.substring(4);
+      WaterContainerArea = ServerSerialCommand.toFloat();
+      EEPROM.updateFloat(WaterContainerAreaEEPROM, WaterContainerArea); //TODO finish
+    }
     else if (ServerSerialCommand.startsWith("CL")) {
       ServerSerialCommand = ServerSerialCommand.substring(2);
       CalLowpH = ServerSerialCommand.toFloat();
@@ -379,7 +394,6 @@ void loop() {
       calStatus = calStatus | 1;
       EEPROM.update(calStatusEEPROM, calStatus);
       EEPROM.updateInt(CalLowEEPROM, CalLow);
-      
       EEPROM.updateFloat(CalLowpHEEPROM, CalLowpH);
       
     } else if (ServerSerialCommand.startsWith("CM")) {
@@ -446,10 +460,7 @@ void loop() {
     MasterSerialCommand = "";
   } // End of if (MasterSerialCommand.length() >0 )
 
-  //update values
-  //get temperatures
-  //
-  //Serial.print(waterTemperature);
+ \
   if(currentMillis - pumpPreviousMillis > pumpInterval && !liquidFilled){
     updateWaterLevel();
     TurnPumpOn();
@@ -493,22 +504,14 @@ void loop() {
   if(currentMillis - rtcPreviousMillis > rtcInterval){
     RTC.get(rtc,true);
     LightControl();
- 
     /*
     rtc[6]  // year
     rtc[5] //month
     rtc[4] //date
-
     rtc[2] //hour
-
     rtc[1] //min
-
     rtc[0] //sec
-
     rtc[3] //day of week
-   
-
-
     */
     rtcPreviousMillis = currentMillis;
   }
@@ -694,7 +697,7 @@ void LightControl(){
 
   if(AutomaticLightControl){
     if((!lightStates[0] || !lightStates[1]) && ((rtc[2]==HourLightOn && rtc[1]>=MinuteLightOn) ||(rtc[2]>HourLightOn && rtc[2]<HourLightOff) )){
-      TurnAllLightsOn(WantedAutomaticBrighteness);
+      TurnAllLightsOn((float)WantedAutomaticBrighteness);
     }
     else if((lightStates[0] || lightStates[1]) && ((rtc[2]==HourLightOff && rtc[1]>=MinuteLightOff) || (rtc[2]<=HourLightOn&& rtc[1] < MinuteLightOn ))){
       TurnAllLightsOff();

@@ -1,8 +1,11 @@
 
 #include <ESP8266WiFi.h>
+
 #include <ESP8266WiFiMulti.h>
 
 #include <SocketIoClient.h>
+
+#include <CayenneMQTTESP8266.h>
 
 #define STASSID "NattyNaomi" //Put SSID Here
 #define STAPSK "dizzypiano750" //Put Password Here
@@ -86,14 +89,14 @@ void setup() {
     socket.on("CalibrateMiddlepH", UpdateMiddlepHCalibrate);
     socket.on("CalibrateUpperpH", UpdateUpperpHCalibrate);
     socket.on("CalibrateTDS", UpdateTDSCalibrate);
+    socket.on("WantedWaterLevel", UpdateWantedWaterLevel);
+    socket.on("WaterContainerArea", UpdateWaterContainerArea);
+    socket.on("WantedAutomaticBrightness", UpdateWantedAutomaticBrightness);
+    socket.on("pHTolerance", UpdatepHTolerance);
 
 
     //IPAdress localIP = WiFi.localIP();
-    Serial.print("c");
-    
-    
-
-
+    Serial.print("is");
 
 }
 
@@ -197,7 +200,21 @@ void UpdateTDSCalibrate(const char * payload, size_t length){
     Serial.print((String)"CTDS" +(String)payload);
 }
 
+void UpdatepHTolerance(const char * payload, size_t length){
+    Serial.print((String)"pht:" + (String)payload); //TODO integrate these into the server and the main control
+}
 
+void UpdateWantedAutomaticBrightness(const char * payload, size_t length){
+    Serial.print((String)"wab:" + (String)payload);
+}
+
+void UpdateWantedWaterLevel(const char * payload, size_t length){
+    Serial.print((String)"wwl:" + (String)payload);
+}
+
+void UpdateWaterContainerArea(const char * payload, size_t length){
+    Serial.print((String)"wca:" + (String)payload);
+}
 void connectEvent(const char * payload, size_t length)
 {
     socket.emit("isControlSocket", "1");
