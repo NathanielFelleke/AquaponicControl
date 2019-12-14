@@ -8,7 +8,7 @@ const io = require('socket.io')(http);
 const ArrayList = require('arraylist');
 const mongoose = require('mongoose');
 
-const var WrongDataTypeMessage = "Wrong Data Type: ";
+const WrongDataTypeMessage = "Wrong Data Type: ";
 mongoose.connect(keys.mongoDB.dbURI, {useNewUrlParser: true},function(error){
     if(error)
 {
@@ -124,7 +124,7 @@ io.on('connection', function (socket) {
             })
         }
     });
-    socket.on("WantedpHInterval",function(data){'
+    socket.on("WantedpHInterval",function(data){
     //TODO filter data'
         if(typeof(data)=='number'){
             io.emit("WantedpHInterval",data);

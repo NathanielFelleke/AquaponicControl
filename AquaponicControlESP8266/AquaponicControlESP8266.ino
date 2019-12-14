@@ -9,8 +9,8 @@
 
 #include "config.h"
 
-const char mqttUsername[] = 
-const char 
+#define CAYENNE_PRINT Serial 
+
 //ESP8266WiFi WiFi;
 const int controlID = 0;
 const char server[] = SERVER_IP;
@@ -82,7 +82,7 @@ void setup() {
     socket.on("connect", connectEvent);
     socket.on("WantedpH", UpdateWantedpH);
     socket.on("WantedHumidity", UpdateWantedHumidity);
-    socket.on("WantedPumpInterval", UUpdateWantedPumpInterval);
+    socket.on("WantedPumpInterval", UpdateWantedPumpInterval);
     socket.on("WaterDrainTime", UpdateWaterDrainTime);
     socket.on("DistanceSensorHeight", UpdateDistanceSensorHeight);
     socket.on("WantedpHInterval", UpdatepHInterval);
@@ -120,15 +120,58 @@ void loop() {
       
       char SerialCommandChar[SerialCommand.length()];
       SerialCommand.toCharArray(SerialCommandChar,SerialCommand.length()+1); 
-      Serial.println(SerialCommandChar);
-        socket.emit("controlUpdate",SerialCommandChar);
+        if(SerialCommand.startsWith("{") && SerialCommand.endsWith("}")){
+          socket.emit("controlUpdate",SerialCommandChar);
+        }
+        else{  
+          if(SerialCommand.startsWith("ph:")){
+              pHReading = SerialCommand.substring(3).toFloat();
+
+          }
+          else if(SerialCommand.startsWith("iat:")){
+              insideAirTemperature = SerialCommand.substring(4).toFloat();
+              
+          }
+         else if(SerialCommand.startsWith("oat:")){
+              outsideAirTemperature = SerialCommand.substring(4).toFloat();
+              
+          }
+          else if(SerialCommand.startsWith("ih:")){
+              insideHumidity = SerialCommand.substring(3).toFloat();
+              
+          }
+          else if(SerialCommand.startsWith("oh:")){
+              outsideAirTemperature = SerialCommand.substring(3).toFloat();
+              
+          }
+          else if(SerialCommand.startsWith("wt:")){
+              waterTemperature = SerialCommand.substring(3).toFloat();
+              
+          }
+          else if(SerialCommand.startsWith("tv:")){
+              insideAirTemperature = SerialCommand.substring(3).toFloat();
+              
+          }
+          else if(SerialCommand.startsWith("lf:")){
+              liquidFilled = SerialCommand.substring(3).toFloat();
+              
+          }
+          else if(SerialCommand.startsWith("tds:")){
+              tdsValue = SerialCommand.substring(4).toFloat();
+              
+          }
+          else if(SerialCommand.startsWith("wl:")){
+              waterLevel = SerialCommand.substring(3).toFloat();
+              
+          }
+        }
         
         //TODO add header that checks for the input and update the matching variable example= .startsWith("wt="")  
         //TODO Create Code that checks for serial coming from Arduino Master COntrol
         SerialCommand = "";
     }
     socket.loop();
-    Cayenne.loop();
+  //TODO remove all cayenne stuff from arduino itself and move to server
 }
 
 
@@ -144,6 +187,18 @@ void formatJSON(){
 
 }
 
+CAYENNE_OUT_DEFAULT(){
+    Cayenne.virtualWrite(1, pHReading);
+    Cayenne.celsiusWrite(2,insideAirTemperature);
+    Cayenne.celsiusWrite(3,outsideAirTemperature);
+    Cayenne.virtualWrite(4,insideHumidity);
+    Cayenne.virtualWrite(5,outsideHumidity);
+    Cayenne.virtualWrite(6,waterTemperature);
+    Cayenne.virtualWrite(7,turbidityVoltage);
+    Cayenne.virtualWrite(8,liquidFilled);
+    Cayenne.virtualWrite(9,tdsValue);
+    Cayenne.virtualWrite(10,waterLevel);
+}
 
 //handling methods for socket
 

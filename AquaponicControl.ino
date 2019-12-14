@@ -75,10 +75,10 @@ const int CalHighEEPROM = 48;
 const int CalHighpHEEPROM = 50;
 const int wantedHumidityEEPROM = 54;
 const int wantedpHEEPROM = 55;
-const pHToleranceEEPROM = 59;
+const int pHToleranceEEPROM = 59;
 const int WantedWaterLevelEEPROM = 63;
 const int WaterContainerAreaEEPROM = 67;
-const WantedAutomaticBrightnessEEPROM = 71;
+const int WantedAutomaticBrightnessEEPROM = 71;
 
 //unit constants
 const float cubicFeetToLitersConstant = 28.3168466;
@@ -104,7 +104,7 @@ float pHReading3;
 float previouspHReading;
 int AV;
 float wantedpH;
-float pHTolerance = EEPROM.readFloat();
+float pHTolerance = EEPROM.readFloat(pHToleranceEEPROM);
 
 unsigned int CalLow = 341;
 float CalLowpH = 4.01;
@@ -322,7 +322,7 @@ void loop() {
 
   if (ServerSerialCommand.length() > 0) {
     //TODO Create Code that checks for serial coming from ESP8266
-    if (ServerSerialCommand == "c") {
+    if (ServerSerialCommand == "is") {
       delay(1000);
       
       initServer();
@@ -370,12 +370,12 @@ void loop() {
     else if(ServerSerialCommand.startsWith("dsh:")){
       ServerSerialCommand = ServerSerialCommand.substring(4);
       heightOfSensor = ServerSerialCommand.toFloat();
-      EEPROM.updateFlaot(heightOfSensorEEPROM,heightOfSensor);
+      EEPROM.updateFloat(heightOfSensorEEPROM,heightOfSensor);
     }
     else if(ServerSerialCommand.startsWith("wab:")){
       ServerSerialCommand = ServerSerialCommand.substring(4);
       WantedAutomaticBrightness = ServerSerialCommand.toInt();
-      EEPROM.update(WantedAutomaticBrightenessEEPROM, WantedAutomaticBrightness)
+      EEPROM.update(WantedAutomaticBrightnessEEPROM, WantedAutomaticBrightness);
     }
     else if(ServerSerialCommand.startsWith("wwl:")){
       ServerSerialCommand = ServerSerialCommand.substring(4);
@@ -412,7 +412,7 @@ void loop() {
       calStatus = calStatus | 4;
       EEPROM.update(calStatusEEPROM, calStatus);
       EEPROM.updateInt(CalHighEEPROM, CalHigh);
-      EEPROM.updatePloat(CalHighpHEEPROM, CalHighpH);
+      EEPROM.updateFloat(CalHighpHEEPROM, CalHighpH);
     } else if (ServerSerialCommand.startsWith("CTDS")) {
       ServerSerialCommand = ServerSerialCommand.substring(4);
       tdsCalibrationValue = ServerSerialCommand.toFloat();
@@ -515,9 +515,6 @@ void loop() {
     */
     rtcPreviousMillis = currentMillis;
   }
-
-
-  
   if(pumpState){
     updateLiquidFilled();
     if(liquidFilled){
@@ -611,12 +608,15 @@ void updatepH() {
     Serial.print("pH = ");
     Serial.println(pHReading);
     Server.print((String)"{\"ph\":" + (String)pHReading + (String)"}");
+    delay(200);
+    Server.print((String)"ph:" + (String)pHReading);
   } // End of if PHReading > 2 && PHReading < 12
   else {    // "{\"foo\":\"bar\"}"
     Server.print("{\"ph\":\"error\"}");
+    Server.print((String)"ph:" + (String)0);
     Serial.println("pH Probe Error");
   }
-  delay(50);
+  delay(200);
 
   //TODO write code that updates esp8266 through serial
 }
@@ -627,38 +627,50 @@ void updateAirTemperature() {
 
   insideHumidity = insideTemperatureSensor.getHumidity();
   outsideHumidity = outsideTemperatureSensor.getHumidity(); // TODO Check if can send all values in same method. also check if delays are effective
-  delay(50);
+  delay(200);
   Server.print((String)"{\"iat\":" + (String)"\"" + (String)insideAirTemperature + (String)"\"}");
-  delay(50);
+  delay(200);
   Server.print((String)"{\"ih\":" + (String)"\"" + (String)insideHumidity + (String)"\"}");
-  delay(50);
+  delay(200);
   Server.print((String)"{\"oat\":" + (String)"\"" + (String)outsideAirTemperature + (String)"\"}");
-  delay(50);
+  delay(200);
   Server.print((String)"{\"oh\":" + (String)"\"" + (String)outsideHumidity + (String)"\"}");
-  
+  delay(200);
+  Server.print((String)"iat:" + (String)insideAirTemperature );
+  delay(200);
+  Server.print((String)"ih:" + (String)insideHumidity);
+  delay(200);
+  Server.print((String)"oat:"  + (String)outsideAirTemperature);
+  delay(200);
+  Server.print((String)"oh:" + (String)outsideHumidity );
 }
 
 void updateWaterTemperature() {
   waterTemperature = waterTemperatureSensor.readTemperature();
-  delay(50);
+  delay(200);
   Server.print((String)"{\"wt\":" + (String)waterTemperature + (String)"}");
-  
+  delay(200);
+  Server.print((String)"wt:" + 89);
 }
 
 void updateTurbidity() {
   turbidityVoltage = turbidityGetMiddleAnalog() * (5.0 / 1024.0); //TODO check if turbidity math is correct
-  delay(50);
+  delay(200);
   Server.print((String)"{\"tv\":" + (String)turbidityVoltage + (String)"}");
-
+  delay(200);
+  Server.print((String)"tv:" + (String)turbidityVoltage);
+  
 
 }
 
 void updateLiquidFilled() {
   previousLiquidFilled = liquidFilled;
   liquidFilled = digitalRead(liquidFilledSensor);
-  delay(50);
+  delay(200);
   if(previousLiquidFilled != liquidFilled){
     Server.print((String)"{\"lf\":" + (String)liquidFilled + (String)"}");
+    delay(200);
+    Server.print((String)"lf:" + (String)liquidFilled);
   }
   
 
@@ -669,8 +681,10 @@ void updateTDS() {
   tdsSensor.update();
   tdsValue = tdsSensor.getTdsValue();
   ecValue = tdsSensor.getEcValue();
-  delay(50);
+  delay(200);
   Server.print((String)"{\"tds\":" + (String)tdsValue + (String)"}");
+  delay(200);
+  Server.print((String)"tds:" + (String)tdsValue);
 
 }
 
@@ -678,6 +692,8 @@ void updateWaterLevel(){
   distance = distanceSensor.measureDistanceCm()/100;
   waterLevel = heightOfSensor - distance;
   Server.print((String)"{\"wl\":" + (String)waterLevel + (String)"}");
+  delay(200);
+  Server.print((String)"wl:" + (String)waterLevel);
 }
 void updateAll() {
   updateWaterTemperature();
@@ -697,7 +713,7 @@ void LightControl(){
 
   if(AutomaticLightControl){
     if((!lightStates[0] || !lightStates[1]) && ((rtc[2]==HourLightOn && rtc[1]>=MinuteLightOn) ||(rtc[2]>HourLightOn && rtc[2]<HourLightOff) )){
-      TurnAllLightsOn((float)WantedAutomaticBrighteness);
+      TurnAllLightsOn((float)WantedAutomaticBrightness);
     }
     else if((lightStates[0] || lightStates[1]) && ((rtc[2]==HourLightOff && rtc[1]>=MinuteLightOff) || (rtc[2]<=HourLightOn&& rtc[1] < MinuteLightOn ))){
       TurnAllLightsOff();
@@ -726,7 +742,7 @@ void TurnAllLightsOn(float brightness) {
 
   lightStates[0] = filteredBrightness;
   lightStates[1] = filteredBrightness;
-  delay(50);
+  delay(200);
   Server.print((String)"{\"lsr\":" + (String)lightStates[0] + ", \"lsb\":" + (String)lightStates[1] + (String)"}");
   
 }
@@ -736,7 +752,7 @@ void TurnAllLightsOff() {
   digitalWrite(blueLightPin, LOW);
   lightStates[0] = 0;
   lightStates[1] = 0;
-  delay(50);
+  delay(200);
   Server.print((String)"{\"lsr\":" + (String)lightStates[0] + ", \"lsb\":" + (String)lightStates[1] + (String)"}");
 
 }
@@ -759,7 +775,7 @@ void TurnRedLightsOn(float brightness) {
 
   filteredBrightness = analogBrightnessValue / 2.55;
   lightStates[0] = filteredBrightness;
-  delay(50);
+  delay(200);
   Server.print((String)"{\"lsr\":"+ (String)lightStates[0] + (String)"}");
 
 }
@@ -767,7 +783,7 @@ void TurnRedLightsOn(float brightness) {
 void TurnRedLightsOff() {
   digitalWrite(redLightPin, LOW);
   lightStates[0] = 0;
-  delay(50);
+  delay(200);
   Server.print((String)"{\"lsr\":"+ (String)lightStates[0] + (String)"}");
  
 }
@@ -789,7 +805,7 @@ void TurnBlueLightsOn(float brightness) {
 
   filteredBrightness = analogBrightnessValue / 2.55;
   lightStates[0] = filteredBrightness;
-  delay(50);
+  delay(200);
   Server.print((String)"{\"lsb\":" + (String)lightStates[1] + (String)"}");
 
 }
@@ -797,7 +813,7 @@ void TurnBlueLightsOn(float brightness) {
 void TurnBlueLightsOff() {
   digitalWrite(blueLightPin, LOW);
   lightStates[1] = 0;
-  delay(50);
+  delay(200);
   Server.print((String)"{\"lsb\":" + (String)lightStates[1] + (String)"}");
 
 }
@@ -806,28 +822,28 @@ void TurnBlueLightsOff() {
 void TurnPumpOn() {
   digitalWrite(pumpControlPin, HIGH);
   pumpState = 1;
-  delay(50);
+  delay(200);
   Server.print((String)"{\"ps\":" + (String)pumpState + (String)"}");
 }
 
 void TurnPumpOff() {
   digitalWrite(pumpControlPin, LOW);
   pumpState = 0;
-  delay(50);
+  delay(200);
   Server.print((String)"{\"ps\":" + (String)pumpState + (String)"}");
 }
 
 void TurnMixerOn() {
   digitalWrite(mixerControlPin, HIGH);
   mixerState = 1;
-  delay(50);
+  delay(200);
   Server.print((String)"{\"ms\":" +  (String)mixerState + (String)"}");
 }
 
 void TurnMixerOff() {
   digitalWrite(mixerControlPin, LOW);
   mixerState = 0;
-  delay(50);
+  delay(200);
   Server.print((String)"{\"ms\":"  + (String)mixerState + (String)"}");
 }
 //Time Methods
