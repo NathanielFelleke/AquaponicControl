@@ -7,19 +7,24 @@
 
 #include <CayenneMQTTESP8266.h>
 
-#define STASSID "NattyNaomi" //Put SSID Here
-#define STAPSK "dizzypiano750" //Put Password Here
+#include "config.h"
 
+const char mqttUsername[] = 
+const char 
 //ESP8266WiFi WiFi;
 const int controlID = 0;
-char server[] = "192.168.0.102";
+const char server[] = SERVER_IP;
 int port = 3000;
 //String readURI = server + "/control/" + controlID;
 
 SocketIoClient socket;
 
-const char * ssid = STASSID;
-const char * password = STAPSK;
+const char ssid[] = WIFI_SSID;
+const char password[] = WIFI_PASSWORD;
+
+const char mqttUsername[] = MQTT_USERNAME;
+const char mqttPassword[] = MQTT_PASSWORD;
+const char mqttClientId[] = MQTT_CLIENT_ID;
 
 //data to receive
 
@@ -97,7 +102,7 @@ void setup() {
 
     //IPAdress localIP = WiFi.localIP();
     Serial.print("is");
-
+    Cayenne.begin(mqttUsername,mqttPassword,mqttClientId,ssid,password);
 }
 
 void loop() {
@@ -123,6 +128,7 @@ void loop() {
         SerialCommand = "";
     }
     socket.loop();
+    Cayenne.loop();
 }
 
 
