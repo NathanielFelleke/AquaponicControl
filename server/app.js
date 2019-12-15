@@ -43,7 +43,7 @@ io.on('connection', function (socket) {
     });
    
     socket.on("controlUpdate", function (data) {
-        console.log("h");
+        console.log(data);
         if(data){
             
             console.log(data);
@@ -75,7 +75,7 @@ io.on('connection', function (socket) {
         }
         else{
             socket.emit("response",{
-                success:0,
+                success:0,    
                 fromArduino: 0,
                 message: WrongDataTypeMessage + typeof(data),
                 field: "WantedHumidity"

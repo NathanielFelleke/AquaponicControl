@@ -76,6 +76,7 @@ void setup() {
       Serial.println("nc");
         delay(2000);
     }
+    Cayenne.begin(mqttUsername,mqttPassword,mqttClientId,ssid,password);
     
 
     socket.begin(server, port);
@@ -120,10 +121,10 @@ void loop() {
       
       char SerialCommandChar[SerialCommand.length()];
       SerialCommand.toCharArray(SerialCommandChar,SerialCommand.length()+1); 
-        if(SerialCommand.startsWith("{")){
-          socket.emit("controlUpdate",SerialCommandChar);
-        }
-        else{  
+       // if(SerialCommand.startsWith("{")){
+          
+        //}
+        //else{  
           if(SerialCommand.startsWith("ph:")){
               pHReading = SerialCommand.substring(3).toFloat();
 
@@ -164,14 +165,19 @@ void loop() {
               waterLevel = SerialCommand.substring(3).toFloat();
               
           }
-        }
+         else{
+            socket.emit("controlUpdate",SerialCommandChar);
+          }
+//}
         
         //TODO add header that checks for the input and update the matching variable example= .startsWith("wt="")  
         //TODO Create Code that checks for serial coming from Arduino Master COntrol
         SerialCommand = "";
     }
-    socket.loop();
+    
   //TODO remove all cayenne stuff from arduino itself and move to server
+  Cayenne.loop();
+  socket.loop();
 }
 
 
@@ -188,7 +194,7 @@ void formatJSON(){
 }
 
 CAYENNE_OUT_DEFAULT(){
-    Cayenne.virtualWrite(1, pHReading);
+      Cayenne.virtualWrite(1, pHReading);
     Cayenne.celsiusWrite(2,insideAirTemperature);
     Cayenne.celsiusWrite(3,outsideAirTemperature);
     Cayenne.virtualWrite(4,insideHumidity);
