@@ -103,7 +103,7 @@ void setup() {
 
     //IPAdress localIP = WiFi.localIP();
     Serial.print("is");
-    Cayenne.begin(mqttUsername,mqttPassword,mqttClientId,ssid,password);
+    
 }
 
 void loop() {
@@ -121,54 +121,53 @@ void loop() {
       
       char SerialCommandChar[SerialCommand.length()];
       SerialCommand.toCharArray(SerialCommandChar,SerialCommand.length()+1); 
-       // if(SerialCommand.startsWith("{")){
-          
-        //}
-        //else{  
-          if(SerialCommand.startsWith("ph:")){
-              pHReading = SerialCommand.substring(3).toFloat();
+       if(SerialCommand.startsWith("{")){
+          socket.emit("controlUpdate",SerialCommandChar);
+        }
+         if(SerialCommand.startsWith("ph:")){
+            pHReading = SerialCommand.substring(3).toFloat();
+            cayenneUpdate();
+        }
+         if(SerialCommand.startsWith("iat:")){
+            insideAirTemperature = SerialCommand.substring(4).toFloat();
+            cayenneUpdate();
+        }
+         if(SerialCommand.startsWith("oat:")){
+            outsideAirTemperature = SerialCommand.substring(4).toFloat();
+            cayenneUpdate();
+        }
+     if(SerialCommand.startsWith("ih:")){
+            insideHumidity = SerialCommand.substring(3).toFloat();
+            cayenneUpdate();
 
-          }
-          else if(SerialCommand.startsWith("iat:")){
-              insideAirTemperature = SerialCommand.substring(4).toFloat();
-              
-          }
-         else if(SerialCommand.startsWith("oat:")){
-              outsideAirTemperature = SerialCommand.substring(4).toFloat();
-              
-          }
-          else if(SerialCommand.startsWith("ih:")){
-              insideHumidity = SerialCommand.substring(3).toFloat();
-              
-          }
-          else if(SerialCommand.startsWith("oh:")){
-              outsideAirTemperature = SerialCommand.substring(3).toFloat();
-              
-          }
-          else if(SerialCommand.startsWith("wt:")){
-              waterTemperature = SerialCommand.substring(3).toFloat();
-              
-          }
-          else if(SerialCommand.startsWith("tv:")){
-              insideAirTemperature = SerialCommand.substring(3).toFloat();
-              
-          }
-          else if(SerialCommand.startsWith("lf:")){
-              liquidFilled = SerialCommand.substring(3).toFloat();
-              
-          }
-          else if(SerialCommand.startsWith("tds:")){
-              tdsValue = SerialCommand.substring(4).toFloat();
-              
-          }
-          else if(SerialCommand.startsWith("wl:")){
-              waterLevel = SerialCommand.substring(3).toFloat();
-              
-          }
-         else{
-            socket.emit("controlUpdate",SerialCommandChar);
-          }
-//}
+
+        }
+         if(SerialCommand.startsWith("oh:")){
+            outsideHumidity = SerialCommand.substring(3).toFloat();
+            cayenneUpdate();
+        }
+         if(SerialCommand.startsWith("wt:")){
+            waterTemperature = SerialCommand.substring(3).toFloat();
+            cayenneUpdate();
+        }
+         if(SerialCommand.startsWith("tv:")){
+            turbidityVoltage = SerialCommand.substring(3).toFloat();
+            cayenneUpdate();
+        }
+         if(SerialCommand.startsWith("lf:")){
+            liquidFilled = SerialCommand.substring(3).toInt();
+            cayenneUpdate();
+        }
+         if(SerialCommand.startsWith("tds:")){
+            tdsValue = SerialCommand.substring(4).toFloat();
+            cayenneUpdate();
+        }
+         if(SerialCommand.startsWith("wl:")){
+            waterLevel = SerialCommand.substring(3).toFloat();
+            cayenneUpdate();
+        }
+         
+
         
         //TODO add header that checks for the input and update the matching variable example= .startsWith("wt="")  
         //TODO Create Code that checks for serial coming from Arduino Master COntrol
@@ -176,7 +175,7 @@ void loop() {
     }
     
   //TODO remove all cayenne stuff from arduino itself and move to server
-  Cayenne.loop();
+  
   socket.loop();
 }
 
@@ -193,17 +192,17 @@ void formatJSON(){
 
 }
 
-CAYENNE_OUT_DEFAULT(){
-      Cayenne.virtualWrite(1, pHReading);
+void cayenneUpdate(){
+    Cayenne.virtualWrite(1, pHReading);
     Cayenne.celsiusWrite(2,insideAirTemperature);
     Cayenne.celsiusWrite(3,outsideAirTemperature);
-    Cayenne.virtualWrite(4,insideHumidity);
-    Cayenne.virtualWrite(5,outsideHumidity);
-    Cayenne.virtualWrite(6,waterTemperature);
-    Cayenne.virtualWrite(7,turbidityVoltage);
-    Cayenne.virtualWrite(8,liquidFilled);
+    Cayenne.virtualWrite(4,insideHumidity,"rel_hum","p");
+    Cayenne.virtualWrite(5,outsideHumidity,"rel_hum","p");
+    Cayenne.celsiusWrite(6,waterTemperature);
+    Cayenne.virtualWrite(7,turbidityVoltage,"voltage","v");
+    Cayenne.virtualWrite(8,liquidFilled,"digital_sensor","d");
     Cayenne.virtualWrite(9,tdsValue);
-    Cayenne.virtualWrite(10,waterLevel);
+    Cayenne.virtualWrite(10,waterLevel,"tl","null");
 }
 
 //handling methods for socket
