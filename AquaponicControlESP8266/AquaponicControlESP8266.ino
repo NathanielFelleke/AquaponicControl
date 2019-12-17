@@ -102,8 +102,8 @@ void setup() {
 
 
     //IPAdress localIP = WiFi.localIP();
-    Serial.print("is");
     
+  
 }
 
 void loop() {
