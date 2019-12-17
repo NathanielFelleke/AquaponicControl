@@ -193,7 +193,7 @@ void formatJSON(){
 }
 
 void cayenneUpdate(){
-    Cayenne.virtualWrite(1, pHReading,"PH","PH");
+    Cayenne.virtualWrite(1, pHReading,"analog_sensor","PH");
     Cayenne.celsiusWrite(2,insideAirTemperature);
     Cayenne.celsiusWrite(3,outsideAirTemperature);
     Cayenne.virtualWrite(4,insideHumidity,"rel_hum","p");
@@ -202,7 +202,7 @@ void cayenneUpdate(){
     Cayenne.virtualWrite(7,turbidityVoltage,"voltage","v");
     Cayenne.virtualWrite(8,liquidFilled,"digital_sensor","d");
     Cayenne.virtualWrite(9,tdsValue,"TDS","ppm");
-    Cayenne.virtualWrite(10,waterLevel,"Water Level","null");
+    Cayenne.virtualWrite(10,waterLevel,"Water Level","m");
 }
 
 //handling methods for socket
