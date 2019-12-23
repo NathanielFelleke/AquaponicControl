@@ -32,7 +32,7 @@ io.on('connection', function (socket) {
     console.log("c");
     socket.on("isControlSocket", function (data) {
         if (data) {
-            socket.emit("WantedpHInterval",10);
+            
                         console.log(data);
             arduinoSocket = socket;
             
