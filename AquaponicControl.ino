@@ -15,7 +15,7 @@
 #include <HCSR04.h>
 
 
-
+#define Master Serial
 #define Server Serial3
 
 #define EZO Serial1
@@ -44,14 +44,11 @@
 #define redLightPin 3
 #define blueLightPin 4
 
-
 #define pumpControlPin 27
 #define mixerControlPin 28
 
-
 #define humidityControlPin 29
 
-//TODO format all variables the same way
 //EEPROM Variables 
 const int heightOfSensorEEPROM = 3;
 const int waterDrainingIntervalEEPROM = 7;
@@ -65,7 +62,7 @@ const int wTIntervalEEPROM = 22;
 const int wAIntervalEEPROM = 24;
 const int tdsIntervalEEPROM = 26;
 const int tIntervalEEPROM = 28;
-const int pumpIntervalEEPROM = 30; //TODO switch around with the wanted variables so must rewrite the EEPROM manually
+const int pumpIntervalEEPROM = 30; 
 const int calStatusEEPROM = 35;
 const int CalLowEEPROM = 36;
 const int CalLowpHEEPROM = 38;
@@ -125,7 +122,7 @@ float pHDownConstant;
 float pHUpMolarity;
 float pHDownMolarity;
 
-int phControManuel = 0;
+int pHControlManuel;
 //TDS Sensor Variables
 
 GravityTDS tdsSensor;
@@ -172,16 +169,15 @@ int previousLiquidFilled= 0;
 
 float distance;
 float waterLevel;
-float heightOfSensor = EEPROM.readFloat(heightOfSensorEEPROM); //TODO write the code for updating the height of the sensor
-UltraSonicDistanceSensor distanceSensor(distanceTriggerPin, distanceEchoPin); //TODO move stuff to setup()
+float heightOfSensor; 
+UltraSonicDistanceSensor distanceSensor(distanceTriggerPin, distanceEchoPin); //TODO move to setup()
 
 //CC
 
-int HourLightOn = EEPROM.readInt(HourLightOnEEPROM);
-int MinuteLightOn = EEPROM.readInt(MinuteLightOnEEPROM); //TODO move stuff to setuop()
-
-int HourLightOff = EEPROM.readInt(HourLightOffEEPROM); //TODO move stuff to setup()
-int MinuteLightOff = EEPROM.readInt(MinuteLightOffEEPROM);
+int HourLightOn;
+int MinuteLightOn; 
+int HourLightOff; 
+int MinuteLightOff;
 int AutomaticLightControl = true;
 //States 
 
@@ -190,11 +186,8 @@ float lightStates[] = {
   100
 };
 
-int WantedAutomaticBrightness = EEPROM.read(WantedAutomaticBrightnessEEPROM);
+int WantedAutomaticBrightness;
  //Red State then Blue State
-
-
-
 
 int pumpState = 0;
 
@@ -202,25 +195,25 @@ int mixerState = 0;
 
 // intervals
 
-unsigned long pHInterval = (long)EEPROM.readInt(pHIntervalEEPROM) * (long)1000;
-unsigned long wTInterval = (long)EEPROM.readInt(wTIntervalEEPROM) * (long)1000;
-unsigned long wAInterval = (long)EEPROM.readInt(wAIntervalEEPROM) * (long)1000; //TODO move stuff to setup
-unsigned long tdsInterval = (long)EEPROM.readInt(tdsIntervalEEPROM) * (long)1000;
-unsigned long tInterval = (long)EEPROM.readInt(tIntervalEEPROM) * (long)1000;
-unsigned long pumpInterval = (long)EEPROM.readInt(pumpIntervalEEPROM) * (long)1000;
-unsigned long rtcInterval = (long)60000;
-unsigned long distanceSensorInterval = (long)60000;
-unsigned long waterDrainingInterval = (long)EEPROM.readInt(waterDrainingIntervalEEPROM) * (long)1000;
+unsigned long pHInterval;
+unsigned long wTInterval; 
+unsigned long wAInterval; 
+unsigned long tdsInterval;
+unsigned long tInterval; 
+unsigned long pumpInterval; 
+unsigned long rtcInterval; 
+unsigned long distanceSensorInterval; 
+unsigned long waterDrainingInterval; 
 
 
-unsigned long pHPreviousMillis = 0;
-unsigned long wTPreviousMillis = 0;
-unsigned long wAPreviousMillis = 0;  
-unsigned long tdsPreviousMillis = 0;
-unsigned long tPreviousMillis = 0;
-unsigned long rtcPreviousMillis = 0;
-unsigned long distanceSensorPreviousMillis  = 0;
-unsigned long pumpPreviousMillis = 0;
+unsigned long pHPreviousMillis;
+unsigned long wTPreviousMillis;
+unsigned long wAPreviousMillis;  
+unsigned long tdsPreviousMillis;
+unsigned long tPreviousMillis;
+unsigned long rtcPreviousMillis;
+unsigned long distanceSensorPreviousMillis;
+unsigned long pumpPreviousMillis;
 unsigned long temporaryDistanceSensorPreviousMillis;
 
 //Pumps
@@ -228,7 +221,7 @@ unsigned long temporaryDistanceSensorPreviousMillis;
 const float VolumeOfEzoTubing;
 
 void setup() {
-  Serial.begin(9600);
+  Master.begin(9600);
   EZO.begin(9600);
   Server.begin(9600);
 
@@ -245,40 +238,68 @@ void setup() {
     calStatus = 0;
     EEPROM.update(calStatusEEPROM, calStatus);
   }
-  Serial.println(calStatus);
+  Master.println(calStatus);
   if ((calStatus & 1) == 1) {
     CalLow = EEPROM.readInt(CalLowEEPROM);
     CalLowpH = EEPROM.readFloat(CalLowpHEEPROM);
     
   }
-  Serial.print("Low pH: ");
-  Serial.print(CalLow);
-  Serial.print("   ");
-  Serial.println(CalLowpH);
+  Master.print("Low pH: ");
+  Master.print(CalLow);
+  Master.print("   ");
+  Master.println(CalLowpH);
 
   if ((calStatus & 2) == 2) {
     CalMid = EEPROM.readInt(CalMidEEPROM);
     CalMidpH = EEPROM.readFloat(CalMidphEEPROM);
     
   }
-  Serial.print("Mid pH: ");
-  Serial.print(CalMid);
-  Serial.print("   ");
-  Serial.println(CalMidpH);
+  Master.print("Mid pH: ");
+  Master.print(CalMid);
+  Master.print("   ");
+  Master.println(CalMidpH);
   if ((calStatus & 4) == 4) {
     CalHigh = EEPROM.readInt(CalHighEEPROM);
     CalHighpH = EEPROM.readFloat(CalHighpHEEPROM);
     
   }
-  Serial.print("High pH: ");
-  Serial.print(CalHigh);
-  Serial.print("   ");
-  Serial.println(CalHighpH);
+  Master.print("High pH: ");
+  Master.print(CalHigh);
+  Master.print("   ");
+  Master.println(CalHighpH);
 
-  
+  pHControlManuel = 0;
+  waterTemperature = 25; //only sets number just in case other methods are dependent and to not break them
+  heightOfSensor = EEPROM.readFloat(heightOfSensorEEPROM);
   wantedHumidity = (float)EEPROM.read(wantedHumidityEEPROM);
-
+  HourLightOn = EEPROM.readInt(HourLightOnEEPROM);
+  MinuteLightOn = EEPROM.readInt(MinuteLightOnEEPROM);
+  HourLightOff = EEPROM.readInt(HourLightOffEEPROM);
+  MinuteLightOff = EEPROM.readInt(MinuteLightOffEEPROM);
+  AutomaticLightControl = true;
+  WantedAutomaticBrightness = EEPROM.read(WantedAutomaticBrightnessEEPROM);
   wantedpH = EEPROM.readFloat(wantedpHEEPROM);
+
+  pHInterval = (long)EEPROM.readInt(pHIntervalEEPROM) * (long)1000;
+  wTInterval = (long)EEPROM.readInt(wTIntervalEEPROM) * (long)1000;
+  wAInterval = (long)EEPROM.readInt(wAIntervalEEPROM) * (long)1000; //TODO move stuff to setup
+  tdsInterval = (long)EEPROM.readInt(tdsIntervalEEPROM) * (long)1000;
+  tInterval = (long)EEPROM.readInt(tIntervalEEPROM) * (long)1000;
+  pumpInterval = (long)EEPROM.readInt(pumpIntervalEEPROM) * (long)1000;
+  rtcInterval = (long)60000;
+  distanceSensorInterval = (long)60000;
+  waterDrainingInterval = (long)EEPROM.readInt(waterDrainingIntervalEEPROM) * (long)1000;
+
+  pHPreviousMillis = 0;
+  wTPreviousMillis = 0;
+  wAPreviousMillis = 0;  
+  tdsPreviousMillis = 0;
+  tPreviousMillis = 0;
+  rtcPreviousMillis = 0;
+  distanceSensorPreviousMillis  = 0;
+  pumpPreviousMillis = 0;
+
+
 
 
   tdsSensor.setKvalueAddress(tdsSensorCalEEPROM); //sets the EEPROM address for the tds sensor k value
@@ -297,7 +318,7 @@ void setup() {
   // TODO need to check if it is okay to use the method so early in their processes 
   analogWrite(redLightPin, lightStates[0]);
   analogWrite(blueLightPin, lightStates[1]);
-  updateAll();
+  updateAll(false);
   
 }
 
@@ -311,10 +332,10 @@ void loop() {
     }
   }
 
-  while (Serial.available()) {
+  while (Master.available()) {
     delay(4); //delay to allow buffer to fill
-    if (Serial.available() > 0) {
-      char c = Serial.read(); //gets one byte from serial buffer
+    if (Master.available() > 0) {
+      char c = Master.read(); //gets one byte from serial buffer
       MasterSerialCommand += c; // Add bytes to string
     }
   } //End of while loop that reads string
@@ -323,12 +344,11 @@ void loop() {
 
  
   if (ServerSerialCommand.length() > 0) {
-    //TODO Create Code that checks for serial coming from ESP8266
-    Serial.println(ServerSerialCommand);
+    Master.println(ServerSerialCommand);
     if (ServerSerialCommand == "is") {
       delay(1000);
       
-      initServer();
+      UpdateAllData(false);
     }
     else if(ServerSerialCommand.startsWith("wph:")){
       ServerSerialCommand = ServerSerialCommand.substring(4);
@@ -354,12 +374,17 @@ void loop() {
       ServerSerialCommand = ServerSerialCommand.substring(4);
       pHInterval = (long)ServerSerialCommand.toInt() * (long)1000;
       EEPROM.updateInt(pHIntervalEEPROM, ServerSerialCommand.toInt());
-      Serial.print(pHInterval);
+      Master.print(pHInterval);
     }
     else if(ServerSerialCommand.startsWith("wti:")){
       ServerSerialCommand = ServerSerialCommand.substring(4);
       wTInterval = (long)ServerSerialCommand.toInt() * (long)1000;
       EEPROM.updateInt(wTIntervalEEPROM, ServerSerialCommand.toInt());
+    }
+    else if(ServerSerialCommand.startsWith("ati:")){
+      ServerSerialCommand = ServerSerialCommand.substring(4);
+      wAInterval = (long)ServerSerialCommand.toInt() * (long)1000;
+      EEPROM.updateInt(wAIntervalEEPROM,ServerSerialCommand.toInt());
     }
     else if(ServerSerialCommand.startsWith("tdsi:")){
       ServerSerialCommand = ServerSerialCommand.substring(5);
@@ -369,7 +394,7 @@ void loop() {
     else if(ServerSerialCommand.startsWith("ti:")){
       ServerSerialCommand = ServerSerialCommand.substring(3);
       tInterval = (long)ServerSerialCommand.toInt() * (long)1000;
-      EEPROM.writeInt(tIntervalEEPROM, ServerSerialCommand.toInt());
+      EEPROM.updateInt(tIntervalEEPROM, ServerSerialCommand.toInt());
     }
     else if(ServerSerialCommand.startsWith("dsh:")){
       ServerSerialCommand = ServerSerialCommand.substring(4);
@@ -428,7 +453,7 @@ void loop() {
   //checking for updates from the computer
   if (MasterSerialCommand.length() > 0) {
     MasterSerialCommand.toUpperCase();
-    Serial.println(MasterSerialCommand);
+    Master.println(MasterSerialCommand);
     if (MasterSerialCommand.startsWith("CL")) {
       MasterSerialCommand = MasterSerialCommand.substring(2);
       CalLowpH = MasterSerialCommand.toFloat();
@@ -464,9 +489,9 @@ void loop() {
     MasterSerialCommand = "";
   } // End of if (MasterSerialCommand.length() >0 )
   if(currentMillis - pHPreviousMillis > pHInterval){
-    updatepH();
+    updatepH(true);
     if(pHReading > wantedpH + pHTolerance){
-      pHDownAdjustment(pHDownAdjustmentcalculation());
+      pHDownAdjustment(pHDownAdjustmentCalculation());
     }
     else if(pHReading < wantedpH - pHTolerance){
       pHUpAdjustment(pHUpAdjustmentCalculation());
@@ -474,127 +499,78 @@ void loop() {
     pHPreviousMillis = currentMillis;
   }
   if(currentMillis - pumpPreviousMillis > pumpInterval && !liquidFilled){
-    updateWaterLevel();
+    updateWaterLevel(true);
     TurnPumpOn();
     pumpPreviousMillis = currentMillis;
   }
   
   else if(currentMillis - wTPreviousMillis > wTInterval){
-    updateWaterTemperature();
+    updateWaterTemperature(true);
     wTPreviousMillis = currentMillis;
   }
   else if(currentMillis - wAPreviousMillis > wAInterval){
-    updateAirTemperature();
+    updateAirTemperature(true);
     wAPreviousMillis = currentMillis;
     if(insideHumidity< wantedHumidity - humidityTolerance){
       digitalWrite(humidityControlPin, HIGH);
     }
-    
   }
   else if(currentMillis - tdsPreviousMillis> tdsInterval){
-    updateTDS();
+    updateTDS(true);
     tdsPreviousMillis = currentMillis;
   }
   else if(currentMillis - tPreviousMillis > tInterval){
-    updateTurbidity();
+    updateTurbidity(true);
     tPreviousMillis = currentMillis;
   }
   else if(currentMillis - distanceSensorPreviousMillis > distanceSensorInterval || currentMillis - temporaryDistanceSensorPreviousMillis > waterDrainingInterval){
-    updateWaterLevel();
+    updateWaterLevel(true);
     distanceSensorPreviousMillis = currentMillis;
   }
 
   if(currentMillis - rtcPreviousMillis > rtcInterval){
     RTC.get(rtc,true);
     LightControl();
-    /*
-    rtc[6]  // year
-    rtc[5] //month
-    rtc[4] //date
-    rtc[2] //hour
-    rtc[1] //min
-    rtc[0] //sec
-    rtc[3] //day of week
-    */
+    //rtc[6]  // year rtc[5] //month rtc[4] //date rtc[2] //hour rtc[1] //min rtc[0] //sec rtc[3] //day of week
     rtcPreviousMillis = currentMillis;
   }
   if(pumpState){
-    updateLiquidFilled();
+    updateLiquidFilled(true);
     if(liquidFilled){
       TurnPumpOff();
-      updateWaterLevel();
+      updateWaterLevel(true);
       temporaryDistanceSensorPreviousMillis = currentMillis;
     }
   }
 }
 
-int pHGetMiddleAnalog() {
 
-  int i;
-  int j;
-  int n = 5;
-  int temp;
 
-  int arr[5];
-  for (i = 0; i < n; i++) {
-    arr[i] = analogRead(pHSensor);
-
-    delay(20);
+void UpdateAllData(bool individual){
+  updateWaterTemperature(individual);
+  updateAirTemperature(individual);
+  updatepH(individual);
+  updateTurbidity(individual);
+  updateTDS(individual);
+  updateWaterLevel(individual);
+  if(!individual){
+     Serial.print((String)"{\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)",\"phi\":"  + (String)(pHInterval/1000) + (String)",\"wti\":" + (String)(wTInterval/1000) + (String)",\"tdsi\":" + (String)(tdsInterval/1000) + (String)",\"ti\":" + (String)(tInterval/1000) + (String)",\"ati\":" + (String)(wAInterval/1000) + (String)",\"wdi\":" + (String)(waterDrainingInterval/1000) + (String)",\"wpi\":" + (String)(pumpInterval/1000)+ (String)",\"wab\":" + (String)WantedAutomaticBrightness +  (String)",\"wph\":" + (String)wantedpH + (String)",\"wh\":" + (String)wantedHumidity + (String)",\"wwl\":" + (String)WantedWaterLevel + (String)",\"dsh\":" + (String)heightOfSensor + (String)",\"wca\":" + (String)WaterContainerArea +(String)"}");
   }
-  for (i = 0; i < n; i++) {
-    for (j = 0; j < n - 1; j++) {
-      if (arr[j] > arr[j + 1]) {
-        int temp = arr[j];
-        arr[j] = arr[j + 1];
-        arr[j + 1] = temp;
-      }
-    }
-  }
-  return arr[2];
 }
-
-unsigned int turbidityGetMiddleAnalog() {
-  int i, j;
-  int n = 5;
-  int temp;
-  int arr[5];
-  for (i = 0; i < n; i++) {
-    arr[i] = analogRead(turbiditySensorPin);
-    delay(100);
+void updateAll(bool individual) {
+  updateWaterTemperature(individual);
+  updateAirTemperature(individual);
+  updatepH(individual);
+  updateTurbidity(individual);
+  updateTDS(individual);
+  updateWaterLevel(individual);
+  if(!individual){
+    Serial.print((String)"{\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)"}");
   }
-  for (i = 0; i < n; i++) {
-    for (j = 0; j < n - 1; j++) {
-      if (arr[j] > arr[j + 1]) {
-        int temp = arr[j];
-        arr[j] = arr[j + 1];
-        arr[j + 1] = temp;
-      }
-    }
-  }
-  return arr[2];
-} // End GetMiddleAnalog
-
-float cubicFeetToLiters(float x) {
-  return x * cubicFeetToLitersConstant;
-}
-
-float pHUpAdjustmentCalculation() {
-  //will return the mL needed to get wanted higher pH
-  float pHUpVolume;
-  
-  return pHUpVolume;
-}
-
-float pHDownAdjustmentcalculation() {
-  //will return the ml needed to get lower pH
-  float pHDownVolume;
-
-  return pHDownVolume;
 }
 
 
-
-void updatepH() {
+void updatepH(bool individual) {
   previouspHReading = pHReading;
   AV = pHGetMiddleAnalog();
   if (AV > CalMid) {
@@ -608,83 +584,70 @@ void updatepH() {
     pHReading3 = pHReading2;
     pHReading2 = pHReading1;
     pHReading1 = pHReading;
-    Server.print((String)"{\"ph\":" + (String)pHReading + (String)"}");
+   
   } // End of if PHReading > 2 && PHReading < 12
   else {    // "{\"foo\":\"bar\"}"
-    Server.print("{\"ph\":\"error\"}");
+    Master.print("{\"ph\":\"error\"}");
   }
-  delay(50);
-
-  //TODO write code that updates esp8266 through serial
+  if(individual){
+   Server.print((String)"{\"ph\":" + (String)pHReading + (String)"}");
+  }
 }
 
-void updateAirTemperature() {
+void updateAirTemperature(bool individual) {
   insideAirTemperature = insideTemperatureSensor.getTemperatureC();
   outsideAirTemperature = outsideTemperatureSensor.getTemperatureC();
 
   insideHumidity = insideTemperatureSensor.getHumidity();
-  outsideHumidity = outsideTemperatureSensor.getHumidity(); // TODO Check if can send all values in same method. also check if delays are effective
-  delay(50);
-  Server.print((String)"{\"iat\":" + (String)"\"" + (String)insideAirTemperature + (String)"\"}");
-  delay(50);
-  Server.print((String)"{\"ih\":" + (String)"\"" + (String)insideHumidity + (String)"\"}");
-  delay(50);
-  Server.print((String)"{\"oat\":" + (String)"\"" + (String)outsideAirTemperature + (String)"\"}");
-  delay(50);
-  Server.print((String)"{\"oh\":" + (String)"\"" + (String)outsideHumidity + (String)"\"}");
-  
+  outsideHumidity = outsideTemperatureSensor.getHumidity(); 
+  if(individual){
+    Server.print((String)"{\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)"}");
+  }
 }
 
-void updateWaterTemperature() {
+void updateWaterTemperature(bool individual) {
   waterTemperature = waterTemperatureSensor.readTemperature();
-  Server.print((String)"{\"wt\":" + (String)waterTemperature + (String)"}");
+  if(individual){
+    Server.print((String)"{\"wt\":" + (String)waterTemperature + (String)"}");
+  }
 }
 
-void updateTurbidity() {
+void updateTurbidity(bool individual) {
   turbidityVoltage = turbidityGetMiddleAnalog() * (5.0 / 1024.0); //TODO check if turbidity math is correct
-  Server.print((String)"{\"tv\":" + (String)turbidityVoltage + (String)"}");
+  if(individual){
+    Server.print((String)"{\"tv\":" + (String)turbidityVoltage + (String)"}");
+  }
 }
 
-void updateLiquidFilled() {
+void updateLiquidFilled(bool individual) {
   previousLiquidFilled = liquidFilled;
   liquidFilled = digitalRead(liquidFilledSensor);
-  if(previousLiquidFilled != liquidFilled){
+  if(previousLiquidFilled != liquidFilled && individual){
     Server.print((String)"{\"lf\":" + (String)liquidFilled + (String)"}");
-   
   }
-  
-
 }
 
-void updateTDS() {
+void updateTDS(bool individual) {
   tdsSensor.setTemperature(waterTemperature);
   tdsSensor.update();
   tdsValue = tdsSensor.getTdsValue();
   ecValue = tdsSensor.getEcValue();
-  Server.print((String)"{\"tds\":" + (String)tdsValue + (String)"}");
-  
-
+  if(individual){
+    Server.print((String)"{\"tds\":" + (String)tdsValue + (String)"}");
+  }
 }
 
-void updateWaterLevel(){
+void updateWaterLevel(bool individual){
   distance = distanceSensor.measureDistanceCm()/100;
-  waterLevel = 100*(heightOfSensor - distance);
-  Server.print((String)"{\"wl\":" + (String)waterLevel + (String)"}");
-  
-}
-void updateAll() {
-  updateWaterTemperature();
-  updateAirTemperature();
-  updatepH();
-  updateTurbidity();
-  updateTDS();
-  updateWaterLevel();
+  waterLevel = (heightOfSensor - distance);
+  if(individual){
+    Server.print((String)"{\"wl\":" + (String)waterLevel + (String)"}");
+  }
 }
 
-//Peristaltic Pump Control Functions
+
 
 //Light Control
-
 
 void LightControl(){
 
@@ -813,23 +776,72 @@ void TurnPumpOff() {
 
 //Time Methods
 
-void setTime(int sec, int min, int hour, int dow, int date, int month, int year) {
-    RTC.stop();
 
-    RTC.set(DS1307_SEC, sec); //---Update time----
-    RTC.set(DS1307_MIN, min);
-    RTC.set(DS1307_HR, hour);
-    RTC.set(DS1307_DOW, dow);
-    RTC.set(DS1307_DATE, date);
-    RTC.set(DS1307_MTH, month);
-    RTC.set(DS1307_YR, year);
-    RTC.start();
+int pHGetMiddleAnalog() {
+
+  int i;
+  int j;
+  int n = 5;
+  int temp;
+
+  int arr[5];
+  for (i = 0; i < n; i++) {
+    arr[i] = analogRead(pHSensor);
+
+    delay(20);
+  }
+  for (i = 0; i < n; i++) {
+    for (j = 0; j < n - 1; j++) {
+      if (arr[j] > arr[j + 1]) {
+        int temp = arr[j];
+        arr[j] = arr[j + 1];
+        arr[j + 1] = temp;
+      }
+    }
+  }
+  return arr[2];
 }
 
-void initServer() {
-  updateAll();
-  //TODO update eeprom stuff to the server
+unsigned int turbidityGetMiddleAnalog() {
+  int i, j;
+  int n = 5;
+  int temp;
+  int arr[5];
+  for (i = 0; i < n; i++) {
+    arr[i] = analogRead(turbiditySensorPin);
+    delay(100);
+  }
+  for (i = 0; i < n; i++) {
+    for (j = 0; j < n - 1; j++) {
+      if (arr[j] > arr[j + 1]) {
+        int temp = arr[j];
+        arr[j] = arr[j + 1];
+        arr[j + 1] = temp;
+      }
+    }
+  }
+  return arr[2];
+} // End GetMiddleAnalog
+
+float cubicFeetToLiters(float x) {
+  return x * cubicFeetToLitersConstant;
 }
+
+float pHUpAdjustmentCalculation() {
+  //will return the mL needed to get wanted higher pH
+  float pHUpVolume;
+  
+  return pHUpVolume;
+}
+
+float pHDownAdjustmentCalculation() {
+  //will return the ml needed to get lower pH
+  float pHDownVolume;
+
+  return pHDownVolume;
+}
+
+
 
 
 void pHUpAdjustment(float volume){
@@ -849,3 +861,17 @@ void PrimeEzoPump()
 {
   EZO.print((String)"D, " + (String)VolumeOfEzoTubing);
 }
+
+void setTime(int sec, int min, int hour, int dow, int date, int month, int year) {
+    RTC.stop();
+
+    RTC.set(DS1307_SEC, sec); //---Update time----
+    RTC.set(DS1307_MIN, min);
+    RTC.set(DS1307_HR, hour);
+    RTC.set(DS1307_DOW, dow);
+    RTC.set(DS1307_DATE, date);
+    RTC.set(DS1307_MTH, month);
+    RTC.set(DS1307_YR, year);
+    RTC.start();
+}
+

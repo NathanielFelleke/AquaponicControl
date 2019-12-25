@@ -5,13 +5,10 @@
 
 #include <SocketIoClient.h>
 
-#include <CayenneMQTTESP8266.h>
+
 
 #include "config.h"
 
-#define CAYENNE_PRINT Serial 
-
-//ESP8266WiFi WiFi;
 const int controlID = 0;
 const char server[] = SERVER_IP;
 int port = 3000;
@@ -22,51 +19,10 @@ SocketIoClient socket;
 const char ssid[] = WIFI_SSID;
 const char password[] = WIFI_PASSWORD;
 
-const char mqttUsername[] = MQTT_USERNAME;
-const char mqttPassword[] = MQTT_PASSWORD;
-const char mqttClientId[] = MQTT_CLIENT_ID;
 
 //data to receive
 
-float waterTemperature;
-float wantedWaterTemperature;
-float allowedLowWaterTemperature;
-float allowedHighWaterTemperature;
 
-float insideAirTemperature;
-float outsideAirTemperature;
-float wantedTemperature;
-float allowedLowAirTemperature;
-float allowedHighAirTemperature;
-
-float insideHumidity;
-float outsideHumidity;
-float wantedHumidity;
-float allowedLowHumidity;
-float allowedHighHumidity;
-
-float pHReading;
-float wantedpH;
-float allowedLowpH;
-float allowedHighpH;
-
-
-float turbidityVoltage;
-float allowedLowTurbidity;
-float allowedHighTurbidity;
-
-float tdsValue;
-float allowedLowTDS;
-float allowedHighTDS;
-
-float waterLevel;
-
-int liquidFilled;
-
-int pumpState;
-int mixerState;
-
-float lightStates[] = {100.0,100.0};
 String SerialCommand;
 
 void setup() {
@@ -98,11 +54,8 @@ void setup() {
     socket.on("WaterContainerArea", UpdateWaterContainerArea);
     socket.on("WantedAutomaticBrightness", UpdateWantedAutomaticBrightness);
     socket.on("pHTolerance", UpdatepHTolerance);
-
-
     //IPAdress localIP = WiFi.localIP();
-    
-  
+    Serial.print("is");
 }
 
 void loop() {
@@ -123,25 +76,16 @@ void loop() {
        if(SerialCommand.startsWith("{\"")){
           socket.emit("controlUpdate",SerialCommandChar);
         }
-        
-
-        
-        //TODO add header that checks for the input and update the matching variable example= .startsWith("wt="")  
-        //TODO Create Code that checks for serial coming from Arduino Master COntrol
+        else{
+            socket.emit("controlUpdate","error");
+        }
         SerialCommand = "";
     }
-    
-  //TODO remove all cayenne stuff from arduino itself and move to server
-  
   socket.loop();
 }
 
 
 void initMainControl() {
-
-}
-
-void initServer(){
 
 }
 
@@ -174,7 +118,6 @@ void UpdateDistanceSensorHeight(const char * payload, size_t length){
     Serial.print((String)"dsh:" + (String)payload);
 
 }
-//TODO create many more handling methods
 
 void UpdatepHInterval(const char * payload, size_t length){
     Serial.print((String)"phi:" + (String)payload);

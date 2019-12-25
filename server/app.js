@@ -33,7 +33,7 @@ io.on('connection', function (socket) {
     socket.on("isControlSocket", function (data) {
         if (data) {
             
-                        console.log(data);
+         console.log(data);
             arduinoSocket = socket;
             
         } else {
