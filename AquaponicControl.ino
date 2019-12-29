@@ -282,7 +282,7 @@ void setup() {
 
   pHInterval = (long)EEPROM.readInt(pHIntervalEEPROM) * (long)1000;
   wTInterval = (long)EEPROM.readInt(wTIntervalEEPROM) * (long)1000;
-  wAInterval = (long)EEPROM.readInt(wAIntervalEEPROM) * (long)1000; //TODO move stuff to setup
+  wAInterval = (long)EEPROM.readInt(wAIntervalEEPROM) * (long)1000; 
   tdsInterval = (long)EEPROM.readInt(tdsIntervalEEPROM) * (long)1000;
   tInterval = (long)EEPROM.readInt(tIntervalEEPROM) * (long)1000;
   pumpInterval = (long)EEPROM.readInt(pumpIntervalEEPROM) * (long)1000;
@@ -469,7 +469,7 @@ void loop() {
       CalMidpH = MasterSerialCommand.toFloat();
       CalMid = pHGetMiddleAnalog();
       calStatus = calStatus | 2;
-       EEPROM.update(calStatusEEPROM, calStatus);
+      EEPROM.update(calStatusEEPROM, calStatus);
       EEPROM.updateInt(CalMidEEPROM, CalMid);
       EEPROM.updateFloat(CalMidphEEPROM, CalMidpH);
       
@@ -565,7 +565,7 @@ void UpdateAll(bool individual) {
   updateTDS(individual);
   updateWaterLevel(individual);
   if(!individual){
-    Server.print((String)"{\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)"}");
+    Server.print((String)"{\"init\":true" + (String)",\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)"}");
   }
 }
 

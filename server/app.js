@@ -330,6 +330,10 @@ io.on('connection', function (socket) {
    
    socket.on("disconnect",function(){
        console.log("d");
+       if(socket.id == arduinoSocket.id){
+           arduinoSocket = null;
+           socket.broadcast.emit("ArduinoDisconnected",true);
+       }
    })
 })
 
