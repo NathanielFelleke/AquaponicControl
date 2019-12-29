@@ -55,7 +55,7 @@ void setup() {
     socket.on("WantedAutomaticBrightness", UpdateWantedAutomaticBrightness);
     socket.on("pHTolerance", UpdatepHTolerance);
     //IPAdress localIP = WiFi.localIP();
-    Serial.print("is");
+    
 }
 
 void loop() {
@@ -173,4 +173,5 @@ void UpdateWaterContainerArea(const char * payload, size_t length){
 void connectEvent(const char * payload, size_t length)
 {
     socket.emit("isControlSocket", "1");
+    Serial.print("is");
 }

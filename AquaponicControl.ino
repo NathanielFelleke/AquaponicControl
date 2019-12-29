@@ -318,7 +318,7 @@ void setup() {
   // TODO need to check if it is okay to use the method so early in their processes 
   analogWrite(redLightPin, lightStates[0]);
   analogWrite(blueLightPin, lightStates[1]);
-  updateAll(false);
+  UpdateAllData(false);
   
 }
 
@@ -554,10 +554,10 @@ void UpdateAllData(bool individual){
   updateTDS(individual);
   updateWaterLevel(individual);
   if(!individual){
-     Serial.print((String)"{\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)",\"phi\":"  + (String)(pHInterval/1000) + (String)",\"wti\":" + (String)(wTInterval/1000) + (String)",\"tdsi\":" + (String)(tdsInterval/1000) + (String)",\"ti\":" + (String)(tInterval/1000) + (String)",\"ati\":" + (String)(wAInterval/1000) + (String)",\"wdi\":" + (String)(waterDrainingInterval/1000) + (String)",\"wpi\":" + (String)(pumpInterval/1000)+ (String)",\"wab\":" + (String)WantedAutomaticBrightness +  (String)",\"wph\":" + (String)wantedpH + (String)",\"wh\":" + (String)wantedHumidity + (String)",\"wwl\":" + (String)WantedWaterLevel + (String)",\"dsh\":" + (String)heightOfSensor + (String)",\"wca\":" + (String)WaterContainerArea +(String)"}");
+     Server.print((String)"{\"init\":true" + (String)",\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)",\"phi\":"  + (String)(pHInterval/1000) + (String)",\"wti\":" + (String)(wTInterval/1000) + (String)",\"tdsi\":" + (String)(tdsInterval/1000) + (String)",\"ti\":" + (String)(tInterval/1000) + (String)",\"ati\":" + (String)(wAInterval/1000) + (String)",\"wdi\":" + (String)(waterDrainingInterval/1000) + (String)",\"wpi\":" + (String)(pumpInterval/1000)+ (String)",\"wab\":" + (String)WantedAutomaticBrightness +  (String)",\"wph\":" + (String)wantedpH + (String)",\"wh\":" + (String)wantedHumidity + (String)",\"wwl\":" + (String)WantedWaterLevel + (String)",\"dsh\":" + (String)heightOfSensor + (String)",\"wca\":" + (String)WaterContainerArea +(String)"}");
   }
 }
-void updateAll(bool individual) {
+void UpdateAll(bool individual) {
   updateWaterTemperature(individual);
   updateAirTemperature(individual);
   updatepH(individual);
@@ -565,7 +565,7 @@ void updateAll(bool individual) {
   updateTDS(individual);
   updateWaterLevel(individual);
   if(!individual){
-    Serial.print((String)"{\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)"}");
+    Server.print((String)"{\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)"}");
   }
 }
 

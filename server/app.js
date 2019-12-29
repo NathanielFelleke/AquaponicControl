@@ -29,11 +29,12 @@ var arduinoSocket;
 var userSockets = new ArrayList;
 io.on('connection', function (socket) {
     
-    console.log("c");
+      
     socket.on("isControlSocket", function (data) {
         if (data) {
             
          console.log(data);
+         
             arduinoSocket = socket;
             
         } else {
@@ -44,7 +45,7 @@ io.on('connection', function (socket) {
     });
    
     socket.on("controlUpdate", function (data) {
-        console.log(data);
+        
         if(data){
             
             console.log(data);
@@ -327,7 +328,9 @@ io.on('connection', function (socket) {
 
 
    
-   
+   socket.on("disconnect",function(){
+       console.log("d");
+   })
 })
 
 http.listen(3000, function () {
