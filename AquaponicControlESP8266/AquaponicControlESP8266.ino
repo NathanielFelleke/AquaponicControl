@@ -43,7 +43,7 @@ void setup() {
     socket.on("DistanceSensorHeight", UpdateDistanceSensorHeight);
     socket.on("WantedpHInterval", UpdatepHInterval);
     socket.on("WantedWaterTemperatureInterval", UpdateWaterTemperatureInterval);
-    socket.on("WantedAirTemperatureInterval", UpdateAirTemperatureInterval);
+    socket.on("WantedAirSensorInterval", UpdateAirSensorInterval);
     socket.on("WantedTDSInterval", UpdateTDSInterval);
     socket.on("WantedTurbidityInterval", UpdateTurbidityInterval);
     socket.on("CalibrateLowerpH", UpdateLowerpHCalibrate);
@@ -127,8 +127,8 @@ void UpdateWaterTemperatureInterval(const char * payload, size_t length){
     Serial.print((String)"wti:" + (String)payload);
 }
 
-void UpdateAirTemperatureInterval(const char * payload, size_t length){
-    Serial.print((String)"ati" + (String)payload);
+void UpdateAirSensorInterval(const char * payload, size_t length){
+    Serial.print((String)"asi" + (String)payload);
 }
 
 void UpdateTDSInterval(const char * payload, size_t length){

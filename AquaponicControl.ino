@@ -381,7 +381,7 @@ void loop() {
       wTInterval = (long)ServerSerialCommand.toInt() * (long)1000;
       EEPROM.updateInt(wTIntervalEEPROM, ServerSerialCommand.toInt());
     }
-    else if(ServerSerialCommand.startsWith("ati:")){
+    else if(ServerSerialCommand.startsWith("asi:")){
       ServerSerialCommand = ServerSerialCommand.substring(4);
       wAInterval = (long)ServerSerialCommand.toInt() * (long)1000;
       EEPROM.updateInt(wAIntervalEEPROM,ServerSerialCommand.toInt());
@@ -554,7 +554,7 @@ void UpdateAllData(bool individual){
   updateTDS(individual);
   updateWaterLevel(individual);
   if(!individual){
-     Server.print((String)"{\"init\":true" + (String)",\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)",\"phi\":"  + (String)(pHInterval/1000) + (String)",\"wti\":" + (String)(wTInterval/1000) + (String)",\"tdsi\":" + (String)(tdsInterval/1000) + (String)",\"ti\":" + (String)(tInterval/1000) + (String)",\"ati\":" + (String)(wAInterval/1000) + (String)",\"wdi\":" + (String)(waterDrainingInterval/1000) + (String)",\"wpi\":" + (String)(pumpInterval/1000)+ (String)",\"wab\":" + (String)WantedAutomaticBrightness +  (String)",\"wph\":" + (String)wantedpH + (String)",\"wh\":" + (String)wantedHumidity + (String)",\"wwl\":" + (String)WantedWaterLevel + (String)",\"dsh\":" + (String)heightOfSensor + (String)",\"wca\":" + (String)WaterContainerArea +(String)"}");
+     Server.print((String)"{\"init\":true" + (String)",\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)",\"phi\":"  + (String)(pHInterval/1000) + (String)",\"wti\":" + (String)(wTInterval/1000) + (String)",\"tdsi\":" + (String)(tdsInterval/1000) + (String)",\"ti\":" + (String)(tInterval/1000) + (String)",\"asi\":" + (String)(wAInterval/1000) + (String)",\"wdi\":" + (String)(waterDrainingInterval/1000) + (String)",\"wpi\":" + (String)(pumpInterval/1000)+ (String)",\"wab\":" + (String)WantedAutomaticBrightness +  (String)",\"wph\":" + (String)wantedpH + (String)",\"wh\":" + (String)wantedHumidity + (String)",\"wwl\":" + (String)WantedWaterLevel + (String)",\"dsh\":" + (String)heightOfSensor + (String)",\"wca\":" + (String)WaterContainerArea +(String)"}");
   }
 }
 void UpdateAll(bool individual) {
@@ -565,7 +565,7 @@ void UpdateAll(bool individual) {
   updateTDS(individual);
   updateWaterLevel(individual);
   if(!individual){
-    Server.print((String)"{\"init\":true" + (String)",\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)"}");
+    Server.print((String)"{\"init\":false" + (String)",\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)"}");
   }
 }
 
@@ -584,13 +584,12 @@ void updatepH(bool individual) {
     pHReading3 = pHReading2;
     pHReading2 = pHReading1;
     pHReading1 = pHReading;
-   
+    if(individual){
+      Server.print((String)"{\"ph\":" + (String)pHReading + (String)"}");
+    }
   } // End of if PHReading > 2 && PHReading < 12
-  else {    // "{\"foo\":\"bar\"}"
-    Master.print("{\"ph\":\"error\"}");
-  }
-  if(individual){
-   Server.print((String)"{\"ph\":" + (String)pHReading + (String)"}");
+  else if(individual){    
+    Server.print("{\"ph\":\"error\"}");
   }
 }
 

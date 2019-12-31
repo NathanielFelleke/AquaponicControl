@@ -40,7 +40,7 @@ io.on('connection', function (socket) {
         } else {
             
             userSockets.add(socket);
-            initSocket(socket);
+            initUserSocket(socket);
         }
     });
    
@@ -70,7 +70,7 @@ io.on('connection', function (socket) {
             })
         }
     });
-    socket.on("WantedHumidity",function(data){
+    socket.on("WantedHumidity",function(data){ //todo
          //TODO filter data
          if(typeof(data)=='number'){
             io.emit("WantedHumidity",data);
@@ -84,7 +84,7 @@ io.on('connection', function (socket) {
             })
         }
     });
-    socket.on("WantedPumpInterval",function(data){
+    socket.on("WantedPumpInterval",function(data){ //todo
          //TODO filter data
          if(typeof(data)=='number'){
             io.emit("WantedPumpInterval",data);
@@ -98,7 +98,7 @@ io.on('connection', function (socket) {
             })
         }
     });
-    socket.on("WaterDrainTime",function(data){
+    socket.on("WaterDrainTime",function(data){ //todo
          //TODO filter data
          if(typeof(data)=='number'){
             io.emit("WaterDrainTime",data);
@@ -130,6 +130,7 @@ io.on('connection', function (socket) {
     //TODO filter data'
         if(typeof(data)=='number'){
             io.emit("WantedpHInterval",data);
+            
         }
         else{
             socket.emit("response",{
@@ -154,17 +155,17 @@ io.on('connection', function (socket) {
             })
         }
     });
-    socket.on("WantedAirTemperatureInterval",function(data){
+    socket.on("WantedAirSensorInterval",function(data){
          //TODO filter data
          if(typeof(data)=='number'){
-            io.emit("WantedAirTemperatureInterval",data);
+            io.emit("WantedAirSensorInterval",data);
         }
         else{
             socket.emit("response",{
                 success:0,
                 fromArduino: 0,
                 message: WrongDataTypeMessage + typeof(data),
-                field: "WantedAirTemperatureInterval"
+                field: "WantedAirSensorInterval"
             })
         }
     });
@@ -329,8 +330,9 @@ io.on('connection', function (socket) {
 
    
    socket.on("disconnect",function(){
-       console.log("d");
-       if(socket.id == arduinoSocket.id){
+       
+       if(arduinoSocket && socket.id == arduinoSocket.id){
+           console.log("d");
            arduinoSocket = null;
            socket.broadcast.emit("ArduinoDisconnected",true);
        }
