@@ -15,11 +15,85 @@
      $(document).ready(function(){
         var socket = io();
         socket.emit("isControlSocket", false);
-        socket.on("controlUpdate",function(data){
+        socket.on("initSocket",function(data){
 
+        });
+        socket.on("controlUpdate",function(data){
+            if(data.ph){
+                $('#cph').val(data.ph);
+            }
+            if(data.wt){
+                $('#wt').val(data.wt);
+            }
+            if(data.iat){
+                $('#iat').val(data.iat);
+            }
+            if(data.ih){
+                $('#ih').val(data.ih);
+            }
+            if(data.oat){
+                $('#oat').val(data.oat);
+            }
+            if(data.oh){
+                $('#oh').val(data.oh);
+            }
+            if(data.tv){
+                $('#tv').val(data.tv);
+            }
+            if(data.tds){
+                $('#tds').val(data.tds);
+            }
+            if(data.wl){
+                $('#wl').val(data.wl);
+            }
+            if(data.init){
+                //TODO put data that would special to init
+                if(data.phi){
+                    $('#phi').val(data.phi);
+                }
+                if(data.wti){
+                    $('#wti').val(data.wti);
+                }
+                if(data.tdsi){
+                    $('#tdsi').val(data.tdsi);
+                }
+                if(data.ti){
+                    $('#tvi').val(data.ti);
+                }
+                if(data.asi){
+                    $('#asi').val(data.asi);
+                }
+                if(data.wdi){
+                    $('#wdt').val(data.wdi);
+                }
+                if(data.wpi){
+                    $('#pi').val(data.wpi);
+                }
+                if(data.wab){
+                    $('#wab').val(data.wab);
+                }
+                if(data.wph){
+                    $('#wph').val(data.wph);
+                }
+                if(data.wh){
+                    $('#wh').val(data.wh);
+                }
+                if(data.wwl){
+                    $('#wwl').val(data.wwl);
+                }
+                if(data.dsh){
+                    $('#dsh').val(data.dsh);
+                }
+                if(data.wca){
+                    $('#wca').val(data.wca);
+                }
+            }
         });
         socket.on("WantedpH",function(data){
             $('#wph').val(data);
+        });
+        socket.on("WantedpHInterval",function(data){
+            $('#phi').val(data);
         });
         socket.on("WantedHumidity",function(data){
             $('#wh').val(data);
@@ -30,74 +104,115 @@
         socket.on("WantedTurbidityInterval",function(data){
             $('#tvi').val(data);
         });
-        socket.on("WantedPumpInterval",function(data){
-            $('#pi').val(data);
-        });
         socket.on("WantedWaterTemperatureInterval",function(data){
             $('#wti').val(data);
         });
         socket.on("WantedAirSensorInterval",function(data){
             $('#asi').val(data);
         });
-        
+        socket.on("WaterContainerArea",function(data){
+            $('#wca').val(data);
+        });
+        socket.on("WantedPumpInterval",function(data){
+            $('#pi').val(data);
+        });
+        socket.on("WantedAutomaticBrightness",function(data){
+            $('#wab').val(data);
+        });
+        socket.on("pHTolerance",function(data){
+            $('#pt').val(data);
+        });
+        socket.on("arduinoConnected",function(data){
+            $('#pt').val(1);
+        });
+        socket.on("arduinoDisconnected",function(data){
+            $('#pt').val(0);
+        });
+
+        socket.on("response",function(data){
+            alert("Field: " + data.field + "\n" + data.message);
+        });
+       
         
         $('#pH').submit(function(e){
             e.preventDefault();
-            socket.emit("WantedpH",$('#wph').val());
-            
+            socket.emit("WantedpH",Number($('#wph').val()));
         });
         $('#pHInterval').submit(function(e){
             e.preventDefault();
-            socket.emit("WantedpHInterval",$('#phi').val());
-        });
-        $('#pHInterval').submit(function(e){
-            e.preventDefault();
-            socket.emit("WantedpHInterval",$('#phi').val());
+            socket.emit("WantedpHInterval",Number($('#phi').val()));
         });
         $('#humidity').submit(function(e){
             e.preventDefault();
-            socket.emit("WantedHumidity",$('#wh').val());
+            socket.emit("WantedHumidity",Number($('#wh').val()));
         });
         $('#waterTemperatureInterval').submit(function(e){
             e.preventDefault();
-            socket.emit("WantedWaterTemperatureInterval",$('#wti').val());
+            socket.emit("WantedWaterTemperatureInterval",Number($('#wti').val()));
         });
         $('#airSensorInterval').submit(function(e){
             e.preventDefault();
-            socket.emit("WantedAirSensorInterval",$('#asi').val());
+            socket.emit("WantedAirSensorInterval",Number($('#asi').val()));
         });
         $('#tdsInterval').submit(function(e){
             e.preventDefault();
-            socket.emit("WantedHumidity",$('#tdsi').val());
+            socket.emit("WantedHumidity",Number($('#tdsi').val()));
         });  
         $('#turbidityInterval').submit(function(e){
             e.preventDefault();
-            socket.emit("WantedTurbidityInterval",$('#tvi').val());
+            socket.emit("WantedTurbidityInterval",Number($('#tvi').val()));
         });  
         $('#WaterContainerArea').submit(function(e){
             e.preventDefault();
-            socket.emit("WaterContainerArea",$('#wca').val());
+            socket.emit("WaterContainerArea",Number($('#wca').val()));
+        });  
+        $('#WaterDrainTime').submit(function(e){
+            e.preventDefault();
+            socket.emit("WaterDrainTime",Number($('#wdt').val()));
         });  
         $('#pumpInterval').submit(function(e){
             e.preventDefault();
-            socket.emit("WantedPumpInterval",$('#pi').val());
+            socket.emit("WantedPumpInterval",Number($('#pi').val()));
         });  
-        $('#pumpInterval').submit(function(e){
+        $('#WantedAutomaticBrightness').submit(function(e){
             e.preventDefault();
-            socket.emit("WantedPumpInterval",$('#pi').val());
+            socket.emit("WantedAutomaticBrightness",Number($('#wab').val()));
+        });  
+        $('#pHTolerance').submit(function(e){
+            e.preventDefault();
+            socket.emit("pHTolerance",Number($('#pt').val()));
+        });  
+        $('#HeightOfDistanceSensor').submit(function(e){
+            e.preventDefault();
+            socket.emit("DistaneSensorHeight",Number($('#dsh').val()));
+        }); 
+        $('#CalibrateLowerpH').submit(function(e){
+            e.preventDefault();
+            socket.emit("CalibrateLowerpH",Number($('#clph').val()));
+            $('#clph').val('');
+        });  
+        $('#CalibrateMiddlepH').submit(function(e){
+            e.preventDefault();
+            socket.emit("CalibrateMiddlepH",Number($('#cmph').val()));
+            $('#cmph').val('');
+        });  
+        $('#CalibrateUpperpH').submit(function(e){
+            e.preventDefault();
+            socket.emit("CalibrateUpperpH",Number($('#cuph').val()));
+            $('#cuph').val('');
+        });  
+        $('#CalibrateTDS').submit(function(e){
+            e.preventDefault();
+            socket.emit("CalibrateTDS",Number($('#ctds').val()));
+            $('#ctds').val('');
         });  
         
-        
-        
-        
-
-        
-        
-
-
      });
      
     </script>
+    <form id="arduinoState" action="">
+        Arduino State:<input type="number" name="arduinoState" id="as" value="0" readonly="readonly"/>
+    </form>
     <form id="pH" action="">
         Current pH:<input type="number" name="CurrentpH" id="cph" value="7" readonly="readonly" step=".01"/>
         Wanted pH:<input type="number" step=".01" name="WantedpH" id="wph"/>
@@ -105,22 +220,27 @@
     </form>
     <form id="pHInterval" action="">
         pH Sensor Interval: <input type="number" name="pHInterval" id="phi"/>
+        <input type="submit" value="Submit">
     </form>
     <form id="humidity" action="">
         Current Humidity: <input type="number" name="CurrentHumidity" id="ih" readonly="readonly" step=".01"/>
         Current Outside Humidity:<input type="number" name="CurrentOutsideHumidity" id="oh" readonly="readonly" step=".01"/>
         Wanted Humidity: <input type="number" name="WantedHumidity" id="wh" step=".01"/>
+        <input type="submit" value="Submit">
     </form>
     <form id="temperature" action="">
         Current Water Temperature(°C):<input type="number" name="CurrentWaterTemperature" id="wt" readonly="readonly" step=".01"/>
         Current Air Temperature(°C): <input type="number" name="CurrentAirTemperature" id="iat" readonly="readonly" step=".01"/>
         Current Outside Air Temperature(°C): <input type="number" name="CurrentOutsideAirTemperature" id="oat" readonly="readonly" step=".01"/>
+        <input type="submit" value="Submit">
     </form>
     <form id="waterTemperatureInterval"action="">
         Water Temperature Sensor Interval:<input type="number" name="waterTemperatureInterval" id="wti"/>
+        <input type="submit" value="Submit">
     </form>
     <form id="airSensorInterval"action="">
         Air Sensors Interval: <input type="number" name="airSensorInterval" id="asi"/>
+        <input type="submit" value="Submit">
     </form>
     <form id="waterQuality" action="">
         Current TDS: <input type="number" name="TDS" id="tds" readonly="readonly" step=".01"/>
@@ -128,23 +248,56 @@
     </form>
     <form id="tdsInterval" action="">
         TDS Interval: <input type="number" name="tdsInterval" id="tdsi"/>
+        <input type="submit" value="Submit">
     </form>
     <form id="turbidityInterval" action="">
         Turbidity Interval: <input type="number" name="turbidityInterval" id="tvi"/>
+        <input type="submit" value="Submit">
     </form>
     <form id="waterLevel" action="">
         Water Level(m): <input type="number" name="waterLevel" id="wl" readonly="readonly" step=".01"/>
         Wanted Water Level(m): <input type="number" name="wantedWaterLevel" id="wwl"/>
+        <input type="submit" value="Submit">
     </form>
     <form id="WaterContainerArea" action="">
-        Water Container Area(m^2): <input type="number" name="WaterContainerArea" id="wca" step=".01"/>
+        Water Container Area(m²c): <input type="number" name="WaterContainerArea" id="wca" step=".01"/>
+        <input type="submit" value="Submit">
     </form>
-    <form id=""action=""></form>
+    <form id="WaterDrainTime"action="">
+        Water Drain Time: <input type="number" name="WaterDrainTime" id="wdt"/>
+        <input type="submit" value="Submit">
+    </form>
     <form id="pumpInterval" action="">
         Pump Interval: <input type="number" name="pumpInterval" id="pi"/>
+        <input type="submit" value="Submit">
     </form>
-    
-    
-
+    <form id="WantedAutomaticBrightness" action="">
+        Wanted Automatic Brightness: <input type="number" name="WantedAutomaticBrightness" id="wab"/>
+        <input type="submit" value="Submit">
+    </form>
+    <form id="pHTolerance" action="">
+        pH Tolerance: <input type="number" name="pHTolerance" id="pt" step=".01"/>
+        <input type="submit" value="Submit">
+    </form>
+    <form id="HeightOfDistanceSensor" action="">
+        Height Of Distance Sensor(m): <input type="number" name="HeightOfDistanceSensor" id="dsh" step=".01"/>
+        <input type="submit" value="Submit">
+    </form>
+    <form id="CalibrateLowerpH" action="">
+        Calibrate pH Sensor (Lower): <input type="number" name="CalibrateLowerpH" id="clph" step=".01"/>
+        <input type="submit" value="Submit">
+    </form>
+    <form id="CalibrateMiddlepH" action="">
+        Calibrate pH Sensor (Middle): <input type="number" name="CalibrateMiddlepH" id="cmph" step=".01"/>
+        <input type="submit" value="Submit">
+    </form>
+    <form id="CalibrateUpperpH" action="">
+        Calibrate pH Sensor (Upper): <input type="number" name="CalibrateUpperpH" id="cuph" step=".01"/>
+        <input type="submit" value="Submit">
+    </form>
+    <form id="CalibrateTDS" action="">
+        Calibrate TDS Sensor: <input type="number" name="CalibrateTDS" id="ctds"/>
+        <input type="submit" value="Submit">
+    </form>
 </body>
 </html>

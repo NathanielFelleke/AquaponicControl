@@ -289,6 +289,7 @@ void setup() {
   rtcInterval = (long)60000;
   distanceSensorInterval = (long)60000;
   waterDrainingInterval = (long)EEPROM.readInt(waterDrainingIntervalEEPROM) * (long)1000;
+  AllDataInterval = 900000;
 
   pHPreviousMillis = 0;
   wTPreviousMillis = 0;
@@ -298,7 +299,7 @@ void setup() {
   rtcPreviousMillis = 0;
   distanceSensorPreviousMillis  = 0;
   pumpPreviousMillis = 0;
-
+  AllDataPreviousMillis = 0;
 
 
 
@@ -340,9 +341,6 @@ void loop() {
     }
   } //End of while loop that reads string
   //time update
-
-
- 
   if (ServerSerialCommand.length() > 0) {
     Master.println(ServerSerialCommand);
     if (ServerSerialCommand == "is") {
@@ -449,7 +447,6 @@ void loop() {
     }
     ServerSerialCommand = "";
   } 
-
   //checking for updates from the computer
   if (MasterSerialCommand.length() > 0) {
     MasterSerialCommand.toUpperCase();
@@ -527,7 +524,6 @@ void loop() {
     updateWaterLevel(true);
     distanceSensorPreviousMillis = currentMillis;
   }
-
   if(currentMillis - rtcPreviousMillis > rtcInterval){
     RTC.get(rtc,true);
     LightControl();
@@ -542,10 +538,10 @@ void loop() {
       temporaryDistanceSensorPreviousMillis = currentMillis;
     }
   }
+  if(currentMillis - AllDataPreviousMillis > AllDataInterval){
+    UpdateAllData();
+  }
 }
-
-
-
 void UpdateAllData(bool individual){
   updateWaterTemperature(individual);
   updateAirTemperature(individual);
@@ -554,7 +550,7 @@ void UpdateAllData(bool individual){
   updateTDS(individual);
   updateWaterLevel(individual);
   if(!individual){
-     Server.print((String)"{\"init\":true" + (String)",\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)",\"phi\":"  + (String)(pHInterval/1000) + (String)",\"wti\":" + (String)(wTInterval/1000) + (String)",\"tdsi\":" + (String)(tdsInterval/1000) + (String)",\"ti\":" + (String)(tInterval/1000) + (String)",\"asi\":" + (String)(wAInterval/1000) + (String)",\"wdi\":" + (String)(waterDrainingInterval/1000) + (String)",\"wpi\":" + (String)(pumpInterval/1000)+ (String)",\"wab\":" + (String)WantedAutomaticBrightness +  (String)",\"wph\":" + (String)wantedpH + (String)",\"wh\":" + (String)wantedHumidity + (String)",\"wwl\":" + (String)WantedWaterLevel + (String)",\"dsh\":" + (String)heightOfSensor + (String)",\"wca\":" + (String)WaterContainerArea +(String)"}");
+     Server.print((String)"{\"init\":true" + (String)",\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)",\"phi\":"  + (String)(pHInterval/1000) + (String)",\"wti\":" + (String)(wTInterval/1000) + (String)",\"tdsi\":" + (String)(tdsInterval/1000) + (String)",\"ti\":" + (String)(tInterval/1000) + (String)",\"asi\":" + (String)(wAInterval/1000) + (String)",\"wdi\":" + (String)(waterDrainingInterval/1000) + (String)",\"wpi\":" + (String)(pumpInterval/1000)+ (String)",\"wab\":" + (String)WantedAutomaticBrightness +  (String)",\"wph\":" + (String)wantedpH + (String)",\"wh\":" + (String)wantedHumidity + (String)",\"wwl\":" + (String)WantedWaterLevel + (String)",\"dsh\":" + (String)heightOfSensor + (String)",\"wca\":" + (String)WaterContainerArea (String)",\"pt\":" + (String)pHTolerance +(String)"}");
   }
 }
 void UpdateAll(bool individual) {
@@ -643,9 +639,6 @@ void updateWaterLevel(bool individual){
     Server.print((String)"{\"wl\":" + (String)waterLevel + (String)"}");
   }
 }
-
-
-
 //Light Control
 
 void LightControl(){
@@ -668,7 +661,6 @@ void TurnAllLightsOn(float brightness) {
   } else {
     analogBrightnessValue = brightness * 2.55;
   }
-
   if (analogBrightnessValue == 255) {
     digitalWrite(blueLightPin, HIGH);
     digitalWrite(redLightPin, HIGH);
@@ -681,11 +673,8 @@ void TurnAllLightsOn(float brightness) {
 
   lightStates[0] = filteredBrightness;
   lightStates[1] = filteredBrightness;
- 
-  Server.print((String)"{\"lsr\":" + (String)lightStates[0] + ", \"lsb\":" + (String)lightStates[1] + (String)"}");
-  
+  Server.print((String)"{\"lsr\":" + (String)lightStates[0] + ", \"lsb\":" + (String)lightStates[1] + (String)"}"); 
 }
-
 void TurnAllLightsOff() {
   digitalWrite(redLightPin, LOW);
   digitalWrite(blueLightPin, LOW);
@@ -756,7 +745,6 @@ void TurnBlueLightsOff() {
   Server.print((String)"{\"lsb\":" + (String)lightStates[1] + (String)"}");
 
 }
-
 
 void TurnPumpOn() {
   digitalWrite(pumpControlPin, HIGH);
