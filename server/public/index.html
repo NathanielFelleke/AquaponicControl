@@ -4,14 +4,147 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>Aquaponic Control</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 </head>
-<body>z
+<body>
+    
    <script>
-     var socket = io();
-     socket.emit("isControlSocket", false);
+     
+     $(document).ready(function(){
+        var socket = io();
+        socket.emit("isControlSocket", false);
+        socket.on("controlUpdate",function(data){
 
+        });
+        socket.on("WantedpH",function(data){
+            $('#wph').val(data);
+        });
+        socket.on("WantedHumidity",function(data){
+            $('#wh').val(data);
+        });
+        socket.on("WantedTDSInterval",function(data){
+            $('#tdsi').val(data);
+        });
+        socket.on("WantedTurbidityInterval",function(data){
+            $('#tvi').val(data);
+        });
+        socket.on("WantedPumpInterval",function(data){
+            $('#pi').val(data);
+        });
+        socket.on("WantedWaterTemperatureInterval",function(data){
+            $('#wti').val(data);
+        });
+        socket.on("WantedAirSensorInterval",function(data){
+            $('#asi').val(data);
+        });
+        
+        
+        $('#pH').submit(function(e){
+            e.preventDefault();
+            socket.emit("WantedpH",$('#wph').val());
+            
+        });
+        $('#pHInterval').submit(function(e){
+            e.preventDefault();
+            socket.emit("WantedpHInterval",$('#phi').val());
+        });
+        $('#pHInterval').submit(function(e){
+            e.preventDefault();
+            socket.emit("WantedpHInterval",$('#phi').val());
+        });
+        $('#humidity').submit(function(e){
+            e.preventDefault();
+            socket.emit("WantedHumidity",$('#wh').val());
+        });
+        $('#waterTemperatureInterval').submit(function(e){
+            e.preventDefault();
+            socket.emit("WantedWaterTemperatureInterval",$('#wti').val());
+        });
+        $('#airSensorInterval').submit(function(e){
+            e.preventDefault();
+            socket.emit("WantedAirSensorInterval",$('#asi').val());
+        });
+        $('#tdsInterval').submit(function(e){
+            e.preventDefault();
+            socket.emit("WantedHumidity",$('#tdsi').val());
+        });  
+        $('#turbidityInterval').submit(function(e){
+            e.preventDefault();
+            socket.emit("WantedTurbidityInterval",$('#tvi').val());
+        });  
+        $('#WaterContainerArea').submit(function(e){
+            e.preventDefault();
+            socket.emit("WaterContainerArea",$('#wca').val());
+        });  
+        $('#pumpInterval').submit(function(e){
+            e.preventDefault();
+            socket.emit("WantedPumpInterval",$('#pi').val());
+        });  
+        $('#pumpInterval').submit(function(e){
+            e.preventDefault();
+            socket.emit("WantedPumpInterval",$('#pi').val());
+        });  
+        
+        
+        
+        
+
+        
+        
+
+
+     });
+     
     </script>
+    <form id="pH" action="">
+        Current pH:<input type="number" name="CurrentpH" id="cph" value="7" readonly="readonly" step=".01"/>
+        Wanted pH:<input type="number" step=".01" name="WantedpH" id="wph"/>
+        <input type="submit" value="Submit">
+    </form>
+    <form id="pHInterval" action="">
+        pH Sensor Interval: <input type="number" name="pHInterval" id="phi"/>
+    </form>
+    <form id="humidity" action="">
+        Current Humidity: <input type="number" name="CurrentHumidity" id="ih" readonly="readonly" step=".01"/>
+        Current Outside Humidity:<input type="number" name="CurrentOutsideHumidity" id="oh" readonly="readonly" step=".01"/>
+        Wanted Humidity: <input type="number" name="WantedHumidity" id="wh" step=".01"/>
+    </form>
+    <form id="temperature" action="">
+        Current Water Temperature(°C):<input type="number" name="CurrentWaterTemperature" id="wt" readonly="readonly" step=".01"/>
+        Current Air Temperature(°C): <input type="number" name="CurrentAirTemperature" id="iat" readonly="readonly" step=".01"/>
+        Current Outside Air Temperature(°C): <input type="number" name="CurrentOutsideAirTemperature" id="oat" readonly="readonly" step=".01"/>
+    </form>
+    <form id="waterTemperatureInterval"action="">
+        Water Temperature Sensor Interval:<input type="number" name="waterTemperatureInterval" id="wti"/>
+    </form>
+    <form id="airSensorInterval"action="">
+        Air Sensors Interval: <input type="number" name="airSensorInterval" id="asi"/>
+    </form>
+    <form id="waterQuality" action="">
+        Current TDS: <input type="number" name="TDS" id="tds" readonly="readonly" step=".01"/>
+        Current Turbidity: <input type="number" name="turbidity" id="tv" readonly="readonly" step=".01"/>
+    </form>
+    <form id="tdsInterval" action="">
+        TDS Interval: <input type="number" name="tdsInterval" id="tdsi"/>
+    </form>
+    <form id="turbidityInterval" action="">
+        Turbidity Interval: <input type="number" name="turbidityInterval" id="tvi"/>
+    </form>
+    <form id="waterLevel" action="">
+        Water Level(m): <input type="number" name="waterLevel" id="wl" readonly="readonly" step=".01"/>
+        Wanted Water Level(m): <input type="number" name="wantedWaterLevel" id="wwl"/>
+    </form>
+    <form id="WaterContainerArea" action="">
+        Water Container Area(m^2): <input type="number" name="WaterContainerArea" id="wca" step=".01"/>
+    </form>
+    <form id=""action=""></form>
+    <form id="pumpInterval" action="">
+        Pump Interval: <input type="number" name="pumpInterval" id="pi"/>
+    </form>
+    
+    
+
 </body>
 </html>

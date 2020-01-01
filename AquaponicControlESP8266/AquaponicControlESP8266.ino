@@ -5,13 +5,10 @@
 
 #include <SocketIoClient.h>
 
-#include <CayenneMQTTESP8266.h>
+
 
 #include "config.h"
 
-#define CAYENNE_PRINT Serial 
-
-//ESP8266WiFi WiFi;
 const int controlID = 0;
 const char server[] = SERVER_IP;
 int port = 3000;
@@ -22,51 +19,10 @@ SocketIoClient socket;
 const char ssid[] = WIFI_SSID;
 const char password[] = WIFI_PASSWORD;
 
-const char mqttUsername[] = MQTT_USERNAME;
-const char mqttPassword[] = MQTT_PASSWORD;
-const char mqttClientId[] = MQTT_CLIENT_ID;
 
 //data to receive
 
-float waterTemperature;
-float wantedWaterTemperature;
-float allowedLowWaterTemperature;
-float allowedHighWaterTemperature;
 
-float insideAirTemperature;
-float outsideAirTemperature;
-float wantedTemperature;
-float allowedLowAirTemperature;
-float allowedHighAirTemperature;
-
-float insideHumidity;
-float outsideHumidity;
-float wantedHumidity;
-float allowedLowHumidity;
-float allowedHighHumidity;
-
-float pHReading;
-float wantedpH;
-float allowedLowpH;
-float allowedHighpH;
-
-
-float turbidityVoltage;
-float allowedLowTurbidity;
-float allowedHighTurbidity;
-
-float tdsValue;
-float allowedLowTDS;
-float allowedHighTDS;
-
-float waterLevel;
-
-int liquidFilled;
-
-int pumpState;
-int mixerState;
-
-float lightStates[] = {100.0,100.0};
 String SerialCommand;
 
 void setup() {
@@ -76,7 +32,6 @@ void setup() {
       Serial.println("nc");
         delay(2000);
     }
-    Cayenne.begin(mqttUsername,mqttPassword,mqttClientId,ssid,password);
     
 
     socket.begin(server, port);
@@ -88,7 +43,7 @@ void setup() {
     socket.on("DistanceSensorHeight", UpdateDistanceSensorHeight);
     socket.on("WantedpHInterval", UpdatepHInterval);
     socket.on("WantedWaterTemperatureInterval", UpdateWaterTemperatureInterval);
-    socket.on("WantedAirTemperatureInterval", UpdateAirTemperatureInterval);
+    socket.on("WantedAirSensorInterval", UpdateAirSensorInterval);
     socket.on("WantedTDSInterval", UpdateTDSInterval);
     socket.on("WantedTurbidityInterval", UpdateTurbidityInterval);
     socket.on("CalibrateLowerpH", UpdateLowerpHCalibrate);
@@ -99,11 +54,8 @@ void setup() {
     socket.on("WaterContainerArea", UpdateWaterContainerArea);
     socket.on("WantedAutomaticBrightness", UpdateWantedAutomaticBrightness);
     socket.on("pHTolerance", UpdatepHTolerance);
-
-
     //IPAdress localIP = WiFi.localIP();
     
-  
 }
 
 void loop() {
@@ -121,61 +73,14 @@ void loop() {
       
       char SerialCommandChar[SerialCommand.length()];
       SerialCommand.toCharArray(SerialCommandChar,SerialCommand.length()+1); 
-       if(SerialCommand.startsWith("{")){
+       if(SerialCommand.startsWith("{\"")){
           socket.emit("controlUpdate",SerialCommandChar);
         }
-         if(SerialCommand.startsWith("ph:")){
-            pHReading = SerialCommand.substring(3).toFloat();
-            cayenneUpdate();
+        else{
+            socket.emit("controlUpdate","error");
         }
-         if(SerialCommand.startsWith("iat:")){
-            insideAirTemperature = SerialCommand.substring(4).toFloat();
-            cayenneUpdate();
-        }
-         if(SerialCommand.startsWith("oat:")){
-            outsideAirTemperature = SerialCommand.substring(4).toFloat();
-            cayenneUpdate();
-        }
-     if(SerialCommand.startsWith("ih:")){
-            insideHumidity = SerialCommand.substring(3).toFloat();
-            cayenneUpdate();
-
-
-        }
-         if(SerialCommand.startsWith("oh:")){
-            outsideHumidity = SerialCommand.substring(3).toFloat();
-            cayenneUpdate();
-        }
-         if(SerialCommand.startsWith("wt:")){
-            waterTemperature = SerialCommand.substring(3).toFloat();
-            cayenneUpdate();
-        }
-         if(SerialCommand.startsWith("tv:")){
-            turbidityVoltage = SerialCommand.substring(3).toFloat();
-            cayenneUpdate();
-        }
-         if(SerialCommand.startsWith("lf:")){
-            liquidFilled = SerialCommand.substring(3).toInt();
-            cayenneUpdate();
-        }
-         if(SerialCommand.startsWith("tds:")){
-            tdsValue = SerialCommand.substring(4).toFloat();
-            cayenneUpdate();
-        }
-         if(SerialCommand.startsWith("wl:")){
-            waterLevel = SerialCommand.substring(3).toFloat();
-            cayenneUpdate();
-        }
-         
-
-        
-        //TODO add header that checks for the input and update the matching variable example= .startsWith("wt="")  
-        //TODO Create Code that checks for serial coming from Arduino Master COntrol
         SerialCommand = "";
     }
-    
-  //TODO remove all cayenne stuff from arduino itself and move to server
-  
   socket.loop();
 }
 
@@ -184,26 +89,6 @@ void initMainControl() {
 
 }
 
-void initServer(){
-
-}
-
-void formatJSON(){
-
-}
-
-void cayenneUpdate(){
-    Cayenne.virtualWrite(1, pHReading,"analog_sensor","PH");
-    Cayenne.celsiusWrite(2,insideAirTemperature);
-    Cayenne.celsiusWrite(3,outsideAirTemperature);
-    Cayenne.virtualWrite(4,insideHumidity,"rel_hum","p");
-    Cayenne.virtualWrite(5,outsideHumidity,"rel_hum","p");
-    Cayenne.celsiusWrite(6,waterTemperature);
-    Cayenne.virtualWrite(7,turbidityVoltage,"voltage","v");
-    Cayenne.virtualWrite(8,liquidFilled,"digital_sensor","d");
-    Cayenne.virtualWrite(9,tdsValue,"TDS","ppm");
-    Cayenne.virtualWrite(10,waterLevel,"Water Level","m");
-}
 
 //handling methods for socket
 
@@ -228,7 +113,6 @@ void UpdateDistanceSensorHeight(const char * payload, size_t length){
     Serial.print((String)"dsh:" + (String)payload);
 
 }
-//TODO create many more handling methods
 
 void UpdatepHInterval(const char * payload, size_t length){
     Serial.print((String)"phi:" + (String)payload);
@@ -238,8 +122,8 @@ void UpdateWaterTemperatureInterval(const char * payload, size_t length){
     Serial.print((String)"wti:" + (String)payload);
 }
 
-void UpdateAirTemperatureInterval(const char * payload, size_t length){
-    Serial.print((String)"ati" + (String)payload);
+void UpdateAirSensorInterval(const char * payload, size_t length){
+    Serial.print((String)"asi" + (String)payload);
 }
 
 void UpdateTDSInterval(const char * payload, size_t length){
@@ -284,4 +168,5 @@ void UpdateWaterContainerArea(const char * payload, size_t length){
 void connectEvent(const char * payload, size_t length)
 {
     socket.emit("isControlSocket", "1");
+    Serial.print("is");
 }
