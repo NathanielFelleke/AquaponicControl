@@ -30,17 +30,14 @@ var userSockets = new ArrayList;
 var savedData;
 io.on('connection', function (socket) {
     
-      
+      if(arduinoSocket){
+        socket.emit("arduinoConnected",1); 
+      }
     socket.on("isControlSocket", function (data) {
         if (data) {
-            
-         console.log(data);
-         
             arduinoSocket = socket;
-            socket.emit("arduinoConnected",1);
-            
-        } else {
-            
+             
+        } else { 
             userSockets.add(socket);
             socket.emit("initSocket",savedData);
         }
@@ -78,6 +75,12 @@ io.on('connection', function (socket) {
                 }
                 if(data.wl){
                     savedData.wl = data.wl;
+                }
+                if(data.lsr){
+                    savedData.lsr = data.lsr;
+                }
+                if(data.lsb){
+                    savedData.lsb = data.lsb;
                 }
             }
         }
@@ -175,7 +178,7 @@ io.on('connection', function (socket) {
         if(typeof(data)=='number'){
             io.emit("WantedpHInterval",data);
             if(savedData){
-                savedData.wpi = data;
+                savedData.phi = data;
             }
         }
         else{
@@ -393,7 +396,7 @@ io.on('connection', function (socket) {
     socket.on("WantedAutomaticBrightness",function(data){
         //TODO filter data
         if(typeof(data)=='number' && (data>=0 && data<=100)){
-            io.emit("WantedAutomicBrightness",data);
+            io.emit("WantedAutomaticBrightness",data);
             if(savedData){
                 savedData.wab = data;
             }   
@@ -423,7 +426,64 @@ io.on('connection', function (socket) {
             });
         }
     });
-   socket.on("disconnect",function(){
+    socket.on("TimeLightOn",function(data){
+        console.log(data);
+        if((data.hlon>= 0 || data.hlon <24) || (data.mlon>=0 || data.mlon<60)){
+            if(arduinoSocket){
+                arduinoSocket.emit("TimeLightOn","hlon:" + data.hlon.toString() + "mlon:" + data.mlon.toString());
+                socket.broadcast.emit("TimeLightOnUser",data);
+                if(savedData){
+                    savedData.hlon = data.hlon;
+                    savedData.mlon = data.mlon;
+                }
+            }
+            else{
+                socket.emit("response",{
+                    success:0,
+                    fromArduino: 0,
+                    message: "Arduino Not Connected",
+                    field: "TimeLightOn"
+                }); 
+            }
+        }
+        else{
+            socket.emit("response",{
+                success:0,
+                fromArduino: 0,
+                message: "Time Submitted Cannot Be Correct",
+                field: "TimeLightOn"
+            }); 
+        }
+    });
+    socket.on("TimeLightOff",function(data){
+        if((data.hloff>= 0 || data.hloff <24) || (data.mloff>=0 || data.mloff<60)){
+            if(arduinoSocket){
+                arduinoSocket.emit("TimeLightOff","hloff:" + data.hloff.toString() + "mloff:" + data.mloff.toString());
+                socket.broadcast.emit("TimeLightOffUser",data);
+                if(savedData){
+                    savedData.hloff = data.hloff;
+                    savedData.mloff = data.mloff;
+                }
+            }
+            else{
+                socket.emit("response",{
+                    success:0,
+                    fromArduino: 0,
+                    message: "Arduino Not Connected",
+                    field: "TimeLightOff"
+                }); 
+            }
+        }
+        else{
+            socket.emit("response",{
+                success:0,
+                fromArduino: 0,
+                message: "Time Submitted Cannot Be Correct",
+                field: "TimeLightOff"
+            }); 
+        }
+    });
+    socket.on("disconnect",function(){
        
        if(arduinoSocket && socket.id == arduinoSocket.id){
            console.log("d");

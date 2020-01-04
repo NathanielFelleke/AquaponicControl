@@ -16,7 +16,94 @@
         var socket = io();
         socket.emit("isControlSocket", false);
         socket.on("initSocket",function(data){
-
+            if(data.ph){
+                $('#cph').val(data.ph);
+            }
+            if(data.wt){
+                $('#wt').val(data.wt);
+            }
+            if(data.iat){
+                $('#iat').val(data.iat);
+            }
+            if(data.ih){
+                $('#ih').val(data.ih);
+            }
+            if(data.oat){
+                $('#oat').val(data.oat);
+            }
+            if(data.oh){
+                $('#oh').val(data.oh);
+            }
+            if(data.tv){
+                console.log(data.tv);
+                $('#tv').val(data.tv)
+            }
+            if(data.tds){
+                $('#tds').val(data.tds);
+            }
+            if(data.wl){
+                $('#wl').val(data.wl);
+            }
+            if(data.phi){
+                $('#phi').val(data.phi);
+            }
+            if(data.wti){
+                $('#wti').val(data.wti);
+            }
+            if(data.tdsi){
+                $('#tdsi').val(data.tdsi);
+            }
+            if(data.ti){
+                $('#tvi').val(data.ti);
+            }
+            if(data.asi){
+                $('#asi').val(data.asi);
+            }
+            if(data.wdi){
+                $('#wdt').val(data.wdi);
+            }
+            if(data.wpi){
+                $('#pi').val(data.wpi);
+            }
+            if(data.wab){
+                $('#wab').val(data.wab);
+            }
+            if(data.wph){
+                $('#wph').val(data.wph);
+            }
+            if(data.wh){
+                $('#wh').val(data.wh);
+            }
+            if(data.wwl){
+                $('#wwl').val(data.wwl);
+            }
+            if(data.dsh){
+                $('#dsh').val(data.dsh);
+            }
+            if(data.wca){
+                $('#wca').val(data.wca);
+            }
+            if(data.pt){
+                $('#pt').val(data.pt);
+            }
+            if(data.hlon){
+                $('#hlon').val(data.hlon);
+            }
+            if(data.mlon){
+                $('#mlon').val(data.mlon);
+            }
+            if(data.hloff){
+                $('#hloff').val(data.hloff);
+            }
+            if(data.mloff){
+                $('#mloff').val(data.mloff);
+            }
+            if(data.lsr){
+                $('#lsr').val(data.lsr);
+            }
+            if(data.lsb){
+                $('#lsb').val(data.lsb);
+            }
         });
         socket.on("controlUpdate",function(data){
             if(data.ph){
@@ -45,6 +132,12 @@
             }
             if(data.wl){
                 $('#wl').val(data.wl);
+            }
+            if(data.lsr){
+                $('#lsr').val(data.lsr);
+            }
+            if(data.lsb){
+                $('#lsb').val(data.lsb);
             }
             if(data.init){
                 //TODO put data that would special to init
@@ -87,6 +180,21 @@
                 if(data.wca){
                     $('#wca').val(data.wca);
                 }
+                if(data.pt){
+                    $('#pt').val(data.pt);
+                }
+                if(data.hlon){
+                    $('#hlon').val(data.hlon);
+                }
+                if(data.mlon){
+                    $('#mlon').val(data.mlon);
+                }
+                if(data.hloff){
+                    $('#hloff').val(data.hloff);
+                }
+                if(data.mloff){
+                    $('#mloff').val(data.mloff);
+                }
             }
         });
         socket.on("WantedpH",function(data){
@@ -122,17 +230,33 @@
         socket.on("pHTolerance",function(data){
             $('#pt').val(data);
         });
+        socket.on("TimeLightOnUser",function(data){
+            if(data.hlon){
+                    $('#hlon').val(data.hlon);
+            }
+            if(data.mlon){
+                $('#mlon').val(data.mlon);
+            }
+                
+        });
+        socket.on("TimeLightOffUser",function(data){
+            if(data.hloff){
+                $('#hloff').val(data.hloff);
+            }
+            if(data.mloff){
+                $('#mloff').val(data.mloff);
+            }
+        });
         socket.on("arduinoConnected",function(data){
-            $('#pt').val(1);
+            $('#as').val(1);
         });
         socket.on("arduinoDisconnected",function(data){
-            $('#pt').val(0);
+            $('#as').val(0);
         });
 
         socket.on("response",function(data){
             alert("Field: " + data.field + "\n" + data.message);
         });
-       
         
         $('#pH').submit(function(e){
             e.preventDefault();
@@ -178,13 +302,27 @@
             e.preventDefault();
             socket.emit("WantedAutomaticBrightness",Number($('#wab').val()));
         });  
+        $('#TimeLightOn').submit(function(e){
+            e.preventDefault();
+            socket.emit("TimeLightOn",{
+                hlon: $('#hlon').val(),
+                mlon: $('#mlon').val()
+            });
+        });  
+        $('#TimeLightOff').submit(function(e){
+            e.preventDefault();
+            socket.emit("TimeLightOff",{
+                hloff: $('#hloff').val(),
+                mloff: $('#mloff').val()
+            });
+        });  
         $('#pHTolerance').submit(function(e){
             e.preventDefault();
             socket.emit("pHTolerance",Number($('#pt').val()));
         });  
         $('#HeightOfDistanceSensor').submit(function(e){
             e.preventDefault();
-            socket.emit("DistaneSensorHeight",Number($('#dsh').val()));
+            socket.emit("DistanceSensorHeight",Number($('#dsh').val()));
         }); 
         $('#CalibrateLowerpH').submit(function(e){
             e.preventDefault();
@@ -213,25 +351,76 @@
     <form id="arduinoState" action="">
         Arduino State:<input type="number" name="arduinoState" id="as" value="0" readonly="readonly"/>
     </form>
+    <h2>pH</h2>
     <form id="pH" action="">
         Current pH:<input type="number" name="CurrentpH" id="cph" value="7" readonly="readonly" step=".01"/>
         Wanted pH:<input type="number" step=".01" name="WantedpH" id="wph"/>
         <input type="submit" value="Submit">
     </form>
-    <form id="pHInterval" action="">
-        pH Sensor Interval: <input type="number" name="pHInterval" id="phi"/>
-        <input type="submit" value="Submit">
-    </form>
+    
+    <h2>Humidity</h2>
     <form id="humidity" action="">
         Current Humidity: <input type="number" name="CurrentHumidity" id="ih" readonly="readonly" step=".01"/>
         Current Outside Humidity:<input type="number" name="CurrentOutsideHumidity" id="oh" readonly="readonly" step=".01"/>
         Wanted Humidity: <input type="number" name="WantedHumidity" id="wh" step=".01"/>
         <input type="submit" value="Submit">
     </form>
+    <h2>Temperature</h2>
     <form id="temperature" action="">
         Current Water Temperature(°C):<input type="number" name="CurrentWaterTemperature" id="wt" readonly="readonly" step=".01"/>
         Current Air Temperature(°C): <input type="number" name="CurrentAirTemperature" id="iat" readonly="readonly" step=".01"/>
         Current Outside Air Temperature(°C): <input type="number" name="CurrentOutsideAirTemperature" id="oat" readonly="readonly" step=".01"/>
+    </form>
+    <h2>Water Quality and Level Sensors</h2>
+    <form id="waterQuality" action="">
+        Current TDS: <input type="number" name="TDS" id="tds" readonly="readonly" step=".01"/>
+        Current Turbidity: <input type="number" name="turbidity" id="tv" readonly="readonly" step=".01"/>
+    </form>
+    <form id="waterLevel" action="">
+        Water Level(m): <input type="number" name="waterLevel" id="wl" readonly="readonly" step=".01"/>
+        Wanted Water Level(m): <input type="number" name="wantedWaterLevel" id="wwl"/>
+        <input type="submit" value="Submit">
+    </form>
+    <h2>Lights</h2>
+    <form id="LightStates" action="">
+        Red Light State: <input type="number" name="RedLightState" id="lsr"/>
+        Blue Light State: <input type="number" name="BlueLightState" id="lsb"/>
+        <input type="submit" value="Submit">
+    </form>
+    <form id="WantedAutomaticBrightness" action="">
+        Wanted Automatic Brightness: <input type="number" name="WantedAutomaticBrightness" id="wab"/>
+        <input type="submit" value="Submit">
+    </form>
+    <form id="TimeLightOn" action="">
+        Hour Light On: <input type="number" name="HourLightOn" id="hlon"/>
+        Minute Light On: <input type="number" name="MinuteLightOn" id="mlon"/>
+        <input type="submit" value="Submit">
+    </form>
+    <form id="TimeLightOff" action="">
+        Hour Light Off: <input type="number" name="HourLightOff" id="hloff"/>
+        Minute Light Off: <input type="number" name="MinuteLightOff" id="mloff"/>
+        <input type="submit" value="Submit">
+    </form>
+    <h2>Constants</h2>
+    <form id="pHTolerance" action="">
+        pH Tolerance: <input type="number" name="pHTolerance" id="pt" step=".01"/>
+        <input type="submit" value="Submit">
+    </form>
+    <form id="HeightOfDistanceSensor" action="">
+        Height Of Distance Sensor(m): <input type="number" name="HeightOfDistanceSensor" id="dsh" step=".01"/>
+        <input type="submit" value="Submit">
+    </form>
+    <form id="WaterContainerArea" action="">
+        Water Container Area(m²): <input type="number" name="WaterContainerArea" id="wca" step=".01"/>
+        <input type="submit" value="Submit">
+    </form>
+    <form id="WaterDrainTime"action="">
+        Water Drain Time: <input type="number" name="WaterDrainTime" id="wdt"/>
+        <input type="submit" value="Submit">
+    </form>
+    <h2>Intervals</h2>
+    <form id="pHInterval" action="">
+        pH Sensor Interval: <input type="number" name="pHInterval" id="phi"/>
         <input type="submit" value="Submit">
     </form>
     <form id="waterTemperatureInterval"action="">
@@ -242,10 +431,6 @@
         Air Sensors Interval: <input type="number" name="airSensorInterval" id="asi"/>
         <input type="submit" value="Submit">
     </form>
-    <form id="waterQuality" action="">
-        Current TDS: <input type="number" name="TDS" id="tds" readonly="readonly" step=".01"/>
-        Current Turbidity: <input type="number" name="turbidity" id="tv" readonly="readonly" step=".01"/>
-    </form>
     <form id="tdsInterval" action="">
         TDS Interval: <input type="number" name="tdsInterval" id="tdsi"/>
         <input type="submit" value="Submit">
@@ -254,35 +439,11 @@
         Turbidity Interval: <input type="number" name="turbidityInterval" id="tvi"/>
         <input type="submit" value="Submit">
     </form>
-    <form id="waterLevel" action="">
-        Water Level(m): <input type="number" name="waterLevel" id="wl" readonly="readonly" step=".01"/>
-        Wanted Water Level(m): <input type="number" name="wantedWaterLevel" id="wwl"/>
-        <input type="submit" value="Submit">
-    </form>
-    <form id="WaterContainerArea" action="">
-        Water Container Area(m²c): <input type="number" name="WaterContainerArea" id="wca" step=".01"/>
-        <input type="submit" value="Submit">
-    </form>
-    <form id="WaterDrainTime"action="">
-        Water Drain Time: <input type="number" name="WaterDrainTime" id="wdt"/>
-        <input type="submit" value="Submit">
-    </form>
     <form id="pumpInterval" action="">
         Pump Interval: <input type="number" name="pumpInterval" id="pi"/>
         <input type="submit" value="Submit">
     </form>
-    <form id="WantedAutomaticBrightness" action="">
-        Wanted Automatic Brightness: <input type="number" name="WantedAutomaticBrightness" id="wab"/>
-        <input type="submit" value="Submit">
-    </form>
-    <form id="pHTolerance" action="">
-        pH Tolerance: <input type="number" name="pHTolerance" id="pt" step=".01"/>
-        <input type="submit" value="Submit">
-    </form>
-    <form id="HeightOfDistanceSensor" action="">
-        Height Of Distance Sensor(m): <input type="number" name="HeightOfDistanceSensor" id="dsh" step=".01"/>
-        <input type="submit" value="Submit">
-    </form>
+    <h2>Calibrate Sensors</h2>
     <form id="CalibrateLowerpH" action="">
         Calibrate pH Sensor (Lower): <input type="number" name="CalibrateLowerpH" id="clph" step=".01"/>
         <input type="submit" value="Submit">

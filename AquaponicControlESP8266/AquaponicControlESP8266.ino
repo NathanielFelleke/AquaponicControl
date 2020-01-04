@@ -1,4 +1,4 @@
-
+   
 #include <ESP8266WiFi.h>
 
 #include <ESP8266WiFiMulti.h>
@@ -54,6 +54,8 @@ void setup() {
     socket.on("WaterContainerArea", UpdateWaterContainerArea);
     socket.on("WantedAutomaticBrightness", UpdateWantedAutomaticBrightness);
     socket.on("pHTolerance", UpdatepHTolerance);
+    socket.on("TimeLightOn",UpdateLightOn);
+    socket.on("TimeLightOff",UpdateLightOff);
     //IPAdress localIP = WiFi.localIP();
     
 }
@@ -164,6 +166,12 @@ void UpdateWantedWaterLevel(const char * payload, size_t length){
 
 void UpdateWaterContainerArea(const char * payload, size_t length){
     Serial.print((String)"wca:" + (String)payload);
+}
+void UpdateLightOn(const char * payload, size_t length){
+    Serial.print((String)payload);
+}
+void UpdateLightOff(const char * payload, size_t length){
+    Serial.print((String)payload);
 }
 void connectEvent(const char * payload, size_t length)
 {

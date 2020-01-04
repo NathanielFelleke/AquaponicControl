@@ -204,6 +204,7 @@ unsigned long pumpInterval;
 unsigned long rtcInterval; 
 unsigned long distanceSensorInterval; 
 unsigned long waterDrainingInterval; 
+unsigned long AllDataInterval;
 
 
 unsigned long pHPreviousMillis;
@@ -215,6 +216,7 @@ unsigned long rtcPreviousMillis;
 unsigned long distanceSensorPreviousMillis;
 unsigned long pumpPreviousMillis;
 unsigned long temporaryDistanceSensorPreviousMillis;
+unsigned long AllDataPreviousMillis;
 
 //Pumps
 
@@ -320,7 +322,6 @@ void setup() {
   analogWrite(redLightPin, lightStates[0]);
   analogWrite(blueLightPin, lightStates[1]);
   UpdateAllData(false);
-  
 }
 
 void loop() {
@@ -345,7 +346,6 @@ void loop() {
     Master.println(ServerSerialCommand);
     if (ServerSerialCommand == "is") {
       delay(1000);
-      
       UpdateAllData(false);
     }
     else if(ServerSerialCommand.startsWith("wph:")){
@@ -398,6 +398,7 @@ void loop() {
       ServerSerialCommand = ServerSerialCommand.substring(4);
       heightOfSensor = ServerSerialCommand.toFloat();
       EEPROM.updateFloat(heightOfSensorEEPROM,heightOfSensor);
+      updateWaterLevel(true);
     }
     else if(ServerSerialCommand.startsWith("wab:")){
       ServerSerialCommand = ServerSerialCommand.substring(4);
@@ -412,7 +413,23 @@ void loop() {
     else if(ServerSerialCommand.startsWith("wca:")){
       ServerSerialCommand = ServerSerialCommand.substring(4);
       WaterContainerArea = ServerSerialCommand.toFloat();
-      EEPROM.updateFloat(WaterContainerAreaEEPROM, WaterContainerArea); //TODO finish
+      EEPROM.updateFloat(WaterContainerAreaEEPROM, WaterContainerArea);
+    }
+    else if(ServerSerialCommand.startsWith("hlon:")){
+      ServerSerialCommand = ServerSerialCommand.substring(5);
+      MinuteLightOn = ServerSerialCommand.substring(ServerSerialCommand.indexOf(":") + 1).toInt();
+      
+      HourLightOn = ServerSerialCommand.substring(0,ServerSerialCommand.indexOf("mlon:")).toInt();
+      Master.print(MinuteLightOn);
+      EEPROM.updateInt(HourLightOnEEPROM, HourLightOn);
+      EEPROM.updateInt(MinuteLightOnEEPROM, MinuteLightOn);
+    }
+    else if(ServerSerialCommand.startsWith("hloff:")){
+      ServerSerialCommand = ServerSerialCommand.substring(6);
+      MinuteLightOff = ServerSerialCommand.substring(ServerSerialCommand.indexOf(":") + 1).toInt();
+      HourLightOff = ServerSerialCommand.substring(0,ServerSerialCommand.indexOf("mloff:")).toInt();
+      EEPROM.updateInt(HourLightOffEEPROM, HourLightOff);
+      EEPROM.updateInt(MinuteLightOffEEPROM, MinuteLightOff);
     }
     else if (ServerSerialCommand.startsWith("CL")) {
       ServerSerialCommand = ServerSerialCommand.substring(2);
@@ -445,6 +462,7 @@ void loop() {
       tdsCalibrationValue = ServerSerialCommand.toFloat();
       tdsSensor.calibrate(tdsCalibrationValue, 25);
     }
+
     ServerSerialCommand = "";
   } 
   //checking for updates from the computer
@@ -527,7 +545,6 @@ void loop() {
   if(currentMillis - rtcPreviousMillis > rtcInterval){
     RTC.get(rtc,true);
     LightControl();
-    //rtc[6]  // year rtc[5] //month rtc[4] //date rtc[2] //hour rtc[1] //min rtc[0] //sec rtc[3] //day of week
     rtcPreviousMillis = currentMillis;
   }
   if(pumpState){
@@ -539,7 +556,7 @@ void loop() {
     }
   }
   if(currentMillis - AllDataPreviousMillis > AllDataInterval){
-    UpdateAllData();
+    UpdateAllData(false);
   }
 }
 void UpdateAllData(bool individual){
@@ -550,7 +567,7 @@ void UpdateAllData(bool individual){
   updateTDS(individual);
   updateWaterLevel(individual);
   if(!individual){
-     Server.print((String)"{\"init\":true" + (String)",\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)",\"phi\":"  + (String)(pHInterval/1000) + (String)",\"wti\":" + (String)(wTInterval/1000) + (String)",\"tdsi\":" + (String)(tdsInterval/1000) + (String)",\"ti\":" + (String)(tInterval/1000) + (String)",\"asi\":" + (String)(wAInterval/1000) + (String)",\"wdi\":" + (String)(waterDrainingInterval/1000) + (String)",\"wpi\":" + (String)(pumpInterval/1000)+ (String)",\"wab\":" + (String)WantedAutomaticBrightness +  (String)",\"wph\":" + (String)wantedpH + (String)",\"wh\":" + (String)wantedHumidity + (String)",\"wwl\":" + (String)WantedWaterLevel + (String)",\"dsh\":" + (String)heightOfSensor + (String)",\"wca\":" + (String)WaterContainerArea (String)",\"pt\":" + (String)pHTolerance +(String)"}");
+     Server.print((String)"{\"init\":true" + (String)",\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"lsr\":" + (String)lightStates[0] + (String)",\"lsb\":" + (String)lightStates[1] + (String)",\"hlon\":" + (String)HourLightOn + (String)",\"mlon\":" + (String)MinuteLightOn + (String)",\"hloff\":" + (String)HourLightOff+  (String)",\"mloff\":" + (String)MinuteLightOff+(String)",\"wl\":" + (String)waterLevel + (String)",\"phi\":"  + (String)(pHInterval/1000) + (String)",\"wti\":" + (String)(wTInterval/1000) + (String)",\"tdsi\":" + (String)(tdsInterval/1000) + (String)",\"ti\":" + (String)(tInterval/1000) + (String)",\"asi\":" + (String)(wAInterval/1000) + (String)",\"wdi\":" + (String)(waterDrainingInterval/1000) + (String)",\"wpi\":" + (String)(pumpInterval/1000)+ (String)",\"wab\":" + (String)WantedAutomaticBrightness +  (String)",\"wph\":" + (String)wantedpH + (String)",\"wh\":" + (String)wantedHumidity + (String)",\"wwl\":" + (String)WantedWaterLevel + (String)",\"dsh\":" + (String)heightOfSensor + (String)",\"wca\":" + (String)WaterContainerArea + (String)",\"pt\":" + (String)pHTolerance +(String)"}");
   }
 }
 void UpdateAll(bool individual) {
@@ -561,7 +578,7 @@ void UpdateAll(bool individual) {
   updateTDS(individual);
   updateWaterLevel(individual);
   if(!individual){
-    Server.print((String)"{\"init\":false" + (String)",\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)"}");
+    Server.print((String)"{\"init\":false" + (String)",\"wt\":" + (String)waterTemperature +  (String)",\"iat\":" + (String)insideAirTemperature + (String)",\"ih\":" +  (String)insideHumidity + (String)",\"oat\":" + (String)outsideAirTemperature + (String)",\"oh\":" + (String)outsideHumidity + (String)",\"ph\":" + (String)pHReading + (String)",\"tv\":" + (String)turbidityVoltage + (String)",\"tds\":" + (String)tdsValue + (String)",\"wl\":" + (String)waterLevel + (String)",\"lsr\":" + (String)lightStates[0] + (String)",\"lsb\":" + (String)lightStates[1] + (String)"}");
   }
 }
 
@@ -642,7 +659,6 @@ void updateWaterLevel(bool individual){
 //Light Control
 
 void LightControl(){
-
   if(AutomaticLightControl){
     if((!lightStates[0] || !lightStates[1]) && ((rtc[2]==HourLightOn && rtc[1]>=MinuteLightOn) ||(rtc[2]>HourLightOn && rtc[2]<HourLightOff) )){
       TurnAllLightsOn((float)WantedAutomaticBrightness);
@@ -700,20 +716,15 @@ void TurnRedLightsOn(float brightness) {
   } else {
     analogWrite(redLightPin, analogBrightnessValue);
   }
-
   filteredBrightness = analogBrightnessValue / 2.55;
   lightStates[0] = filteredBrightness;
-  
   Server.print((String)"{\"lsr\":"+ (String)lightStates[0] + (String)"}");
-
 }
 
 void TurnRedLightsOff() {
   digitalWrite(redLightPin, LOW);
   lightStates[0] = 0;
-  
   Server.print((String)"{\"lsr\":"+ (String)lightStates[0] + (String)"}");
- 
 }
 
 void TurnBlueLightsOn(float brightness) {
